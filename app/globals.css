@@ -19,3 +19,147 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.navbar {
+  padding: 15px;
+}
+
+.banner {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+  color: white;
+  padding: 50px 0;
+}
+
+.features {
+  padding: 50px 0;
+}
+
+.features .feature-box {
+  padding: 20px;
+}
+
+.team {
+  padding: 50px 0;
+}
+
+.download-app {
+  background: linear-gradient(135deg, #96c93d, #00b09b);
+  color: white;
+  padding: 50px 0;
+}
+
+.team {
+  padding: 50px 0;
+}
+
+.team .team-detail {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.team .team-detail img {
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.team h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #6c63ff; /* Purple color for names */
+}
+
+.team p {
+  font-size: 14px;
+  color: #666;
+}
+
+.sectioner-header h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.sectioner-header .line {
+  display: block;
+  width: 50px;
+  height: 3px;
+  background-color: #6c63ff;
+  margin: 10px auto;
+}
+
+.section-content .row {
+  margin-top: 20px;
+}
+
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+}
+
+/* General Banner Styling */
+.banner h1 {
+  margin-bottom: 20px;
+}
+
+.banner h4 {
+  margin-bottom: 20px;
+}
+
+.banner p {
+  margin-bottom: 20px;
+}
+
+.waitlist-form input {
+  min-height: 50px;
+}
+
+.waitlist-form button {
+  min-height: 50px;
+}
+
+.banner img {
+  margin-top: 20px;
+}
+
+.features-section {
+  padding: 60px 0;
+  background-color: #fff;
+}
+
+.features-section h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.features-section .feature-icon {
+  background-color: rgba(0, 176, 155, 0.1);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.features-section .feature-icon i {
+  font-size: 2.5rem;
+  color: #00b09b;
+}
+
+.features-section h5 {
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.features-section p {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+}
+
+
