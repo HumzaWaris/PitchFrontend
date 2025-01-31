@@ -47,18 +47,16 @@ const Team: React.FC = () => {
                             <span className="line"></span>
                         </div>
                         <div className="section-content text-center">
-                            <div className="row">
+                            <div className="team-container">
                                 {team.map((member, index) => (
-                                    <div className="col-md-4" key={index}>
-                                        <div className="team-detail">
-                                            <img
-                                                src={member.image}
-                                                className="img-fluid rounded-circle"
-                                                alt={member.name}
-                                            />
-                                            <h4>{member.name}</h4>
-                                            <p>{member.role}</p>
-                                        </div>
+                                    <div className="team-member-card" key={index}>
+                                        <img
+                                            src={member.image}
+                                            className="img-fluid"
+                                            alt={member.name}
+                                        />
+                                        <h4>{member.name}</h4>
+                                        <p>{member.role}</p>
                                     </div>
                                 ))}
                             </div>
@@ -66,7 +64,8 @@ const Team: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Past Contributors Section */}
+
+                {/* Past Contributors Section with Grid Layout */}
                 <div className="row mt-5">
                     <div className="col-md-12">
                         <div className="sectioner-header text-center">
@@ -74,9 +73,9 @@ const Team: React.FC = () => {
                             <span className="line"></span>
                         </div>
                         <div className="section-content text-center">
-                            <div className="row">
+                            <div className="past-contributors-container">
                                 {pastContributors.map((contributor, index) => (
-                                    <div className="col-md-4" key={index}>
+                                    <div className="past-contributor-card" key={index}>
                                         <h4>{contributor.name}</h4>
                                         <p>{contributor.role}</p>
                                     </div>

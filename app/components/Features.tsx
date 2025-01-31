@@ -27,72 +27,28 @@ export default function Features() {
     ];
 
     return (
-        <section
-            className="features-section"
-            style={{
-                padding: "60px 0",
-                backgroundColor: "#fff",
-                textAlign: "center",
-            }}
-        >
+        <section className="features-section">
             <div className="container">
                 {/* Section Title */}
                 <div className="text-center mb-5">
-                    <h3 style={{ fontWeight: "700", fontSize: "2rem" }}>Features</h3>
-                    <span
-                        style={{
-                            display: "block",
-                            width: "80px",
-                            height: "4px",
-                            backgroundColor: "#00b09b",
-                            margin: "15px auto",
-                            borderRadius: "2px",
-                        }}
-                    ></span>
+                    <h3 className="feature-title">Features</h3>
+                    <span className="line"></span>
                 </div>
 
                 {/* Features Grid */}
-                <div className="row">
+                <div className="features-container">
                     {features.map((feature, index) => (
-                        <div className="col-lg-3 col-md-6 col-sm-12 mb-4" key={index}>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    textAlign: "center",
-                                    padding: "20px",
-                                }}
-                            >
-                                {/* Icon */}
-                                <div
-                                    style={{
-                                        backgroundColor: "rgba(0, 176, 155, 0.1)",
-                                        borderRadius: "50%",
-                                        width: "120px",
-                                        height: "120px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        marginBottom: "20px",
-                                    }}
-                                >
-                                    <i
-                                        className={feature.icon}
-                                        style={{ fontSize: "2.5rem", color: "#00b09b" }}
-                                    ></i>
-                                </div>
-
-                                {/* Title */}
-                                <h5 style={{ fontWeight: "600", fontSize: "1.2rem" }}>
-                                    {feature.title}
-                                </h5>
-
-                                {/* Description */}
-                                <p style={{ fontSize: "1rem", color: "#666" }}>
-                                    {feature.description}
-                                </p>
+                        <div className="feature-box" key={index}>
+                            {/* Icon with Gradient Background */}
+                            <div className="feature-icon">
+                                <i className={feature.icon}></i>
                             </div>
+
+                            {/* Title */}
+                            <h5 className="feature-title">{feature.title}</h5>
+
+                            {/* Description */}
+                            <p className="feature-description">{feature.description}</p>
                         </div>
                     ))}
                 </div>
