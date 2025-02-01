@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Features() {
     const features = [
         {
@@ -11,6 +13,7 @@ export default function Features() {
             title: "Events",
             description:
                 "Find events happening around campus. Follow your favorite clubs and get notified when new events are posted.",
+            link: "/events", // Adding a route link for the Events feature
         },
         {
             icon: "bi bi-robot",
@@ -44,10 +47,18 @@ export default function Features() {
                                 index === 3 ? "md:col-span-3" : ""
                             }`}
                         >
-                            {/* Icon with Gradient Background */}
-                            <div className="bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg">
-                                <i className={`${feature.icon} text-4xl`}></i>
-                            </div>
+                            {/* Conditional Link for Events Feature */}
+                            {feature.link ? (
+                                <Link href={feature.link} passHref>
+                                    <div className="cursor-pointer bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg transition-transform transform hover:scale-110">
+                                        <i className={`${feature.icon} text-4xl`}></i>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <div className="bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg">
+                                    <i className={`${feature.icon} text-4xl`}></i>
+                                </div>
+                            )}
 
                             {/* Title */}
                             <h5 className="text-xl font-semibold text-gray-800">

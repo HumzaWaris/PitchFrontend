@@ -1,3 +1,11 @@
+export function Button({ children, onClick }: { children: string; onClick?: () => void }) {
+    return (
+        <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition duration-200" onClick={onClick}>
+            {children}
+        </button>
+    );
+}
+
 export default function Banner() {
     return (
         <section
@@ -29,9 +37,7 @@ export default function Banner() {
                                 placeholder="example@getwaitlist.com"
                                 className="w-full lg:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
-                            <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition duration-200">
-                                Sign Up
-                            </button>
+                            <Button>Sign Up</Button> {/* Now Button is reusable */}
                         </div>
                         <p className="mt-2 text-xs text-gray-200">
                             Waitlist hosted by <b>getwaitlist.com</b>
