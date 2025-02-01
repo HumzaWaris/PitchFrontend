@@ -27,28 +27,37 @@ export default function Features() {
     ];
 
     return (
-        <section className="features-section">
-            <div className="container">
+        <section id="features" className="bg-white py-20">
+            <div className="container mx-auto px-6 lg:px-12">
                 {/* Section Title */}
-                <div className="text-center mb-5">
-                    <h3 className="feature-title">Features</h3>
-                    <span className="line"></span>
+                <div className="text-center mb-16">
+                    <h3 className="text-4xl font-bold text-gray-800">Features</h3>
+                    <div className="mt-4 w-20 h-1 mx-auto bg-green-500 rounded"></div>
                 </div>
 
                 {/* Features Grid */}
-                <div className="features-container">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 justify-items-center">
                     {features.map((feature, index) => (
-                        <div className="feature-box" key={index}>
+                        <div
+                            key={index}
+                            className={`text-center flex flex-col items-center space-y-4 ${
+                                index === 3 ? "md:col-span-3" : ""
+                            }`}
+                        >
                             {/* Icon with Gradient Background */}
-                            <div className="feature-icon">
-                                <i className={feature.icon}></i>
+                            <div className="bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg">
+                                <i className={`${feature.icon} text-4xl`}></i>
                             </div>
 
                             {/* Title */}
-                            <h5 className="feature-title">{feature.title}</h5>
+                            <h5 className="text-xl font-semibold text-gray-800">
+                                {feature.title}
+                            </h5>
 
                             {/* Description */}
-                            <p className="feature-description">{feature.description}</p>
+                            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
+                                {feature.description}
+                            </p>
                         </div>
                     ))}
                 </div>
