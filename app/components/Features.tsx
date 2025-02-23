@@ -7,6 +7,7 @@ export default function Features() {
             title: "Housing",
             description:
                 "Discover subleasing opportunities near your campus. Find short-term rentals that fit your budget and schedule, all in one place.",
+            link: "/housing",
         },
         {
             icon: "bi bi-calendar4-week",
@@ -52,9 +53,9 @@ export default function Features() {
                         >
                             {feature.link ? (
                                 <Link href={feature.link} passHref>
-                                    <div className="cursor-pointer bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg transition-transform transform hover:scale-110">
+                                    <button className="cursor-pointer bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg transition-transform transform hover:scale-110">
                                         <i className={`${feature.icon} text-4xl`}></i>
-                                    </div>
+                                    </button>
                                 </Link>
                             ) : (
                                 <div className="bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg">

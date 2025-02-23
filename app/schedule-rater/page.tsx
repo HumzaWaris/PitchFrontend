@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { collection, addDoc, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebaseConfig"; // Ensure correct path
+import { db, storage } from "@/lib/firebaseConfig";
 
 export default function ScheduleRater() {
     const [file, setFile] = useState(null);
