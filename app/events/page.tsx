@@ -2,159 +2,347 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { db } from "@/lib/firebaseConfig";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import {
+    collection,
+    onSnapshot,
+    query,
+    orderBy,
+    doc,
+    getDoc,
+} from "firebase/firestore";
 import { Button } from "../components/Banner";
 
+/*
+  Simple icons for tags.
+  Adjust or expand as needed.
+*/
+function TagIcons({ tags = [] }) {
+    const getIconForTag = (tag) => {
+        switch (tag.toLowerCase()) {
+            case "sports":
+                return "⚽";
+            case "music":
+                return "🎵";
+            case "art":
+                return "🎨";
+            default:
+                return "🏷️";
+        }
+    };
+
+    return (
+        <div className="flex space-x-2 mt-2 text-lg">
+            {tags.map((tag, index) => (
+                <span key={index}>{getIconForTag(tag)}</span>
+            ))}
+        </div>
+    );
+}
+
+/*
+  BottomSheet component:
+  - Fetches the club name from Firestore using event.clubID.
+  - Shows event image, title, date/time, description, location map, tags, etc.
+  - Provides an 'Add to Calendar' button linking to Google Calendar.
+*/
+function BottomSheet({ event, onClose }) {
+    const [clubName, setClubName] = useState("");
+
+    // Fetch club data once the event is selected
+    useEffect(() => {
+        const fetchClubData = async () => {
+            if (event && event.clubID) {
+                const clubRef = doc(db, "Clubs", event.clubID);
+                const clubSnap = await getDoc(clubRef);
+                if (clubSnap.exists()) {
+                    // Adjust if your Clubs collection uses a different field name:
+                    setClubName(clubSnap.data().clubName || "");
+                }
+            }
+        };
+        fetchClubData();
+    }, [event]);
+
+    if (!event) return null;
+
+    // Build Google Calendar link (1-hour block, adjust as needed).
+    const start = new Date(event.eventDate);
+    // We'll assume 1 hour after start if there's no actual end time:
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    // Convert to YYYYMMDDTHHMMSSZ (UTC) format
+    const formatForCalendar = (date) =>
+        date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+    const startISO = formatForCalendar(start);
+    const endISO = formatForCalendar(end);
+
+    const calendarURL = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+        event.eventTitle || "Event"
+    )}&dates=${startISO}%2F${endISO}&details=${encodeURIComponent(
+        event.eventDescription || ""
+    )}&location=${encodeURIComponent(event.eventLocation || "")}`;
+
+    // We’ll only show the map if lat & long are non-zero.
+    const hasMap = event.latitude !== 0 && event.longitude !== 0;
+    const mapUrl = hasMap
+        ? `https://www.google.com/maps?q=${event.latitude},${event.longitude}&hl=es;z=14&output=embed`
+        : null;
+
+    return (
+        <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 z-50">
+            {/* Close button */}
+            <div className="flex justify-end">
+                <button
+                    className="text-gray-500 hover:text-gray-700 font-semibold"
+                    onClick={onClose}
+                >
+                    Close
+                </button>
+            </div>
+
+            {/* Content Scrollable if needed */}
+            <div className="max-h-[70vh] overflow-y-auto px-2">
+                {/* Image */}
+                {event.flyer_image && (
+                    <div className="w-full mb-4">
+                        <Image
+                            src={event.flyer_image}
+                            alt={event.eventTitle}
+                            width={400}
+                            height={400}
+                            className="mx-auto rounded-lg object-contain"
+                        />
+                    </div>
+                )}
+
+                {/* Title */}
+                <h1 className="text-xl font-bold mb-2">
+                    {event.eventTitle || "No Title"}
+                </h1>
+
+                {/* Display tags right after the title */}
+                {Array.isArray(event.tags) && event.tags.length > 0 && (
+                    <div className="mb-2">
+                        <TagIcons tags={event.tags} />
+                    </div>
+                )}
+
+                {/* Organization (clubName) */}
+                {clubName && (
+                    <p className="text-gray-700 mb-2 font-semibold">
+                        Hosted by: {clubName}
+                    </p>
+                )}
+
+                {/* Location */}
+                {event.eventLocation && (
+                    <p className="text-gray-700 mb-2">
+                        Location: <strong>{event.eventLocation}</strong>
+                    </p>
+                )}
+
+                {/* Date & Time */}
+                {event.eventDate && (
+                    <p className="text-gray-700 mb-2">
+                        {event.eventDate.toLocaleDateString()} @{" "}
+                        {event.eventDate.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}
+                    </p>
+                )}
+
+                {/* Description */}
+                {event.eventDescription && (
+                    <p className="text-gray-800 mb-2 leading-relaxed">
+                        {event.eventDescription}
+                    </p>
+                )}
+
+                {/* Small Map (only if lat/long != 0) */}
+                {hasMap && (
+                    <div className="mb-4">
+                        <iframe
+                            className="w-full rounded-lg"
+                            height="200"
+                            src={mapUrl}
+                            allowFullScreen
+                            loading="lazy"
+                        />
+                    </div>
+                )}
+
+                {/* Add to Calendar Button */}
+                <div className="mt-4">
+                    <a
+                        href={calendarURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700"
+                    >
+                        Add to Calendar
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Events() {
-    const [activeTab, setActiveTab] = useState("Upcoming");
+    const [activeTab, setActiveTab] = useState("Weekly");
     const [eventsData, setEventsData] = useState([]);
-    const [expandedEvent, setExpandedEvent] = useState(null);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     useEffect(() => {
-        const eventsQuery = query(collection(db, "Purdue University"), orderBy("eventDate", "asc"));
-
+        const eventsQuery = query(
+            collection(db, "Purdue University"),
+            orderBy("eventDate", "asc")
+        );
         const unsubscribe = onSnapshot(eventsQuery, (snapshot) => {
-            const events = snapshot.docs.map(doc => {
-                const data = doc.data();
-                let formattedDate = null;
+            const events = snapshot.docs.map((docSnap) => {
+                const data = docSnap.data();
 
+                // Convert Firestore Timestamp or string to JS Date
+                let formattedDate;
                 if (data.eventDate?.toDate) {
                     formattedDate = data.eventDate.toDate();
-                } else if (typeof data.eventDate === "string") {
+                } else {
                     formattedDate = new Date(data.eventDate);
                 }
 
-                return { id: doc.id, ...data, eventDate: formattedDate };
+                return { id: docSnap.id, ...data, eventDate: formattedDate };
             });
-
-            console.log("Fetched events:", events);
             setEventsData(events);
         });
 
         return () => unsubscribe();
     }, []);
 
-    // Add event to Google Calendar
-    const addToGoogleCalendar = (event) => {
-        if (!event.eventTitle || !event.eventDate) {
-            alert("Event details are missing.");
-            return;
-        }
-
-        const startDate = event.eventDate.toISOString().replace(/-|:|\.\d+/g, "");
-        const endDate = new Date(event.eventDate.getTime() + 60 * 60 * 1000)
-            .toISOString()
-            .replace(/-|:|\.\d+/g, "");
-
-        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.eventTitle)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(event.eventDescription || "")}&location=${encodeURIComponent(event.eventLocation || "")}&sf=true&output=xml`;
-
-        window.open(googleCalendarUrl, "_blank");
-    };
-
-    // Toggle event details
-    const toggleEventDetails = (eventId) => {
-        setExpandedEvent(expandedEvent === eventId ? null : eventId);
-    };
-
-    // Split events into upcoming and past
     const now = new Date();
-    const upcomingEvents = eventsData.filter(event => event.eventDate && event.eventDate >= now);
-    const pastEvents = eventsData
-        .filter(event => event.eventDate && event.eventDate < now)
-        .sort((a, b) => b.eventDate - a.eventDate);
+    // Only upcoming
+    const upcomingEvents = eventsData.filter(
+        (event) => event.eventDate && event.eventDate >= now
+    );
 
-    const displayedEvents = activeTab === "Upcoming" ? upcomingEvents : pastEvents;
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const endOfSemester = new Date(2025, 4, 10);
+
+    let displayedEvents =
+        activeTab === "Weekly"
+            ? upcomingEvents.filter((event) => event.eventDate <= oneWeekFromNow)
+            : upcomingEvents.filter((event) => event.eventDate <= endOfSemester);
+
+    // Group by weekday
+    const eventsByDay = displayedEvents.reduce((acc, event) => {
+        const day = event.eventDate.toLocaleDateString("en-US", {
+            weekday: "long",
+        });
+        if (!acc[day]) acc[day] = [];
+        acc[day].push(event);
+        return acc;
+    }, {});
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 px-6 py-4">
+            {/* Navbar */}
+            <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
+                <div className="flex space-x-6">
+                    <Link
+                        href="/events"
+                        className="font-semibold text-gray-700 flex items-center"
+                    >
+                        📅 Events
+                    </Link>
+                    <Link
+                        href="/housing"
+                        className="font-semibold text-gray-700 flex items-center"
+                    >
+                        🏠 Housing
+                    </Link>
+                </div>
+            </nav>
+
             {/* Header */}
-            <header className="bg-gradient-to-b from-gray-200 to-white p-6 shadow-sm flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-gray-900">Events</h1>
-                <div className="space-x-2">
+            <header className="mt-6 flex justify-between items-center">
+                <h1 className="text-3xl font-bold">Events</h1>
+                <div className="flex space-x-3">
                     <Button
-                        variant={activeTab === "Upcoming" ? "default" : "outline"}
-                        onClick={() => setActiveTab("Upcoming")}
+                        variant={activeTab === "Weekly" ? "default" : "outline"}
+                        onClick={() => setActiveTab("Weekly")}
                     >
-                        Upcoming
+                        Weekly
                     </Button>
                     <Button
-                        variant={activeTab === "Past" ? "default" : "outline"}
-                        onClick={() => setActiveTab("Past")}
+                        variant={activeTab === "Semester" ? "default" : "outline"}
+                        onClick={() => setActiveTab("Semester")}
                     >
-                        Past
+                        Semester
                     </Button>
+                    <Button variant="outline">⚙️ Filters</Button>
                 </div>
             </header>
 
             {/* Events List */}
-            <div className="p-6 max-w-4xl mx-auto">
-                {displayedEvents.length === 0 ? (
-                    <p className="text-gray-500 text-center">No events available.</p>
-                ) : (
-                    displayedEvents.map((event, index) => (
-                        <div key={index} className="mb-8">
-                            <h2 className="text-xl font-semibold text-gray-700">
-                                {event.eventDate ? event.eventDate.toDateString() : "No Date"}
-                            </h2>
-                            <div className="border-l-2 border-gray-300 pl-4 mt-4">
-                                <div className="bg-white p-4 rounded-lg shadow-md flex items-center mb-4">
-                                    <div className="flex-1">
-                                        <p className="text-gray-600 text-sm">
-                                            {event.eventDate ? event.eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "No Time"}
-                                        </p>
-
-                                        <h3 className="text-lg font-bold text-gray-800">{event.eventTitle || "No Title"}</h3>
-
-                                        {/* Clickable Google Maps Location */}
-                                        <p className="text-yellow-500 text-sm">
-                                            📍 <a
-                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.eventLocation)}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="underline text-blue-600 hover:text-blue-800"
-                                        >
-                                            {event.eventLocation || "No Location"}
-                                        </a>
-                                        </p>
-
-                                        <p className="text-gray-500 text-sm">📜 {event.eventDescription || "No Description"}</p>
-                                        <div className="mt-2 flex space-x-2">
-                                            {/* Add to Google Calendar Button */}
-                                            <Button
-                                                className="bg-blue-500 text-white"
-                                                onClick={() => addToGoogleCalendar(event)}
-                                            >
-                                                📅 Add to Calendar
-                                            </Button>
-
-                                            {/* More Info Button */}
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => toggleEventDetails(event.id)}
-                                            >
-                                                {expandedEvent === event.id ? "▲ Less Info" : "▼ More Info"}
-                                            </Button>
-                                        </div>
-
-                                        {/* Expanded Event Details */}
-                                        {expandedEvent === event.id && (
-                                            <div className="mt-4 p-4 bg-gray-100 rounded-lg shadow-inner">
-                                                <p className="text-sm text-gray-700"><strong>Organizer:</strong> {event.eventOrganizer || "Not specified"}</p>
-                                                <p className="text-sm text-gray-700"><strong>Category:</strong> {event.eventCategory || "Not specified"}</p>
-                                                <p className="text-sm text-gray-700"><strong>Details:</strong> {event.eventDescription || "No additional details available."}</p>
-                                            </div>
+            <div className="mt-6 max-w-4xl mx-auto">
+                {Object.entries(eventsByDay).map(([day, events]) => (
+                    <div key={day} className="mt-6">
+                        <h2 className="text-2xl font-bold mb-3">{day}</h2>
+                        <div className="space-y-4">
+                            {events.map((event) => (
+                                <div
+                                    key={event.id}
+                                    className="bg-white p-4 rounded-lg shadow-md flex items-center justify-between"
+                                >
+                                    <div className="flex items-center">
+                                        {event.flyer_image && (
+                                            <Image
+                                                src={event.flyer_image}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-lg object-cover"
+                                                alt={event.eventTitle}
+                                            />
                                         )}
+                                        <div className="ml-4">
+                                            <h3 className="text-lg font-bold">
+                                                {event.eventTitle || "No Title"}
+                                            </h3>
+                                            <p className="text-gray-600 text-sm">
+                                                {event.eventDate.toLocaleDateString()} @{" "}
+                                                {event.eventDate.toLocaleTimeString([], {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
+                                            </p>
+                                            <p className="text-gray-600 text-sm">
+                                                {event.eventLocation || "No Address"}
+                                            </p>
+                                            {/* Use event.tags for TagIcons */}
+                                            <TagIcons tags={event.tags || []} />
+                                        </div>
                                     </div>
-                                    {event.flyer_image && (
-                                        <Image src={event.flyer_image} width={80} height={80} className="rounded-lg" alt={event.eventTitle} />
-                                    )}
+
+                                    {/* More Info button */}
+                                    <div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setSelectedEvent(event)}
+                                        >
+                                            More Info
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
-                    ))
-                )}
+                    </div>
+                ))}
             </div>
+
+            {/* Bottom Sheet */}
+            <BottomSheet event={selectedEvent} onClose={() => setSelectedEvent(null)} />
         </div>
     );
 }
