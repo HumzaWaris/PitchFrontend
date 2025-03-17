@@ -123,7 +123,7 @@ function BottomSheet({ event, onClose }) {
                     {event.eventTitle || "No Title"}
                 </h1>
 
-                {/* Display tags right after the title */}
+                {/* Tags right under the title */}
                 {Array.isArray(event.tags) && event.tags.length > 0 && (
                     <div className="mb-2">
                         <TagIcons tags={event.tags} />
@@ -192,7 +192,8 @@ function BottomSheet({ event, onClose }) {
 }
 
 export default function Events() {
-    const [activeTab, setActiveTab] = useState("Weekly");
+    // Default to Semester
+    const [activeTab, setActiveTab] = useState("Semester");
     const [eventsData, setEventsData] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -205,14 +206,13 @@ export default function Events() {
             const events = snapshot.docs.map((docSnap) => {
                 const data = docSnap.data();
 
-                // Convert Firestore Timestamp or string to JS Date
+                // Convert Firestore Timestamp or string date to JS Date
                 let formattedDate;
                 if (data.eventDate?.toDate) {
                     formattedDate = data.eventDate.toDate();
                 } else {
                     formattedDate = new Date(data.eventDate);
                 }
-
                 return { id: docSnap.id, ...data, eventDate: formattedDate };
             });
             setEventsData(events);
@@ -320,7 +320,7 @@ export default function Events() {
                                             <p className="text-gray-600 text-sm">
                                                 {event.eventLocation || "No Address"}
                                             </p>
-                                            {/* Use event.tags for TagIcons */}
+                                            {/* Use event.tags if your doc field is \"tags\". If it's \"eventTags\", revert. */}
                                             <TagIcons tags={event.tags || []} />
                                         </div>
                                     </div>
