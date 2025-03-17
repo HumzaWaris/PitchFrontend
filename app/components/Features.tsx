@@ -15,6 +15,7 @@ export default function Features() {
             description:
                 "Find events happening around campus. Follow your favorite clubs and get notified when new events are posted.",
             link: "/events",
+
         },
         {
             icon: "bi bi-robot",

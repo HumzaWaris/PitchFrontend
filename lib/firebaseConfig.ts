@@ -1,8 +1,9 @@
-// firebase.js
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+
+
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,10 +14,13 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// Prevent multiple Firebase initializations
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Use "typeof window" to prevent SSR execution
+const auth = typeof window !== "undefined" ? getAuth(app) : null;
+const db = typeof window !== "undefined" ? getFirestore(app) : null;
+const storage = typeof window !== "undefined" ? getStorage(app) : null;
 const googleProvider = new GoogleAuthProvider();
 
 export { auth, db, storage, googleProvider };
