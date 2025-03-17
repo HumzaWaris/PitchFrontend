@@ -45,17 +45,20 @@ export default function Features() {
                     <div className="mt-4 w-20 h-1 mx-auto bg-green-500 rounded"></div>
                 </div>
 
+                {
+                    
+                }
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 justify-items-center">
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className={`text-center flex flex-col items-center space-y-4 ${index === 3 ? "md:col-span-3" : ""}`}
+                            className="text-center flex flex-col items-center space-y-4"
                         >
                             {feature.link ? (
                                 <Link href={feature.link} passHref>
-                                    <button className="cursor-pointer bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg transition-transform transform hover:scale-110">
+                                    <div className="cursor-pointer bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg transition-transform transform hover:scale-110">
                                         <i className={`${feature.icon} text-4xl`}></i>
-                                    </button>
+                                    </div>
                                 </Link>
                             ) : (
                                 <div className="bg-gradient-to-br from-green-300 to-green-500 text-white p-8 rounded-full flex items-center justify-center w-24 h-24 shadow-lg">
