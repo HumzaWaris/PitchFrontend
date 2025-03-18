@@ -22,6 +22,7 @@ export default function LoginPage() {
 
                 if (userSnap.exists()) {
                     setUser({ id: currentUser.uid, ...userSnap.data() });
+                    localStorage.setItem("displayName", userSnap.data().name || "User");
                 } else {
                     await signOut(auth);
                 }
@@ -46,6 +47,8 @@ export default function LoginPage() {
                 return;
             }
             setUser({ id: user.uid, ...userSnap.data() });
+            localStorage.setItem("displayName", userSnap.data().name || "User");
+
         } catch (error) {
             setErrorMessage('Wrong credentials. Please try again.');
         }
@@ -54,6 +57,7 @@ export default function LoginPage() {
     const handleLogout = async () => {
         await signOut(auth);
         setUser(null);
+        localStorage.removeItem("displayName");
     };
 
     if (loading) return <p>Loading...</p>;
