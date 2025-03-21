@@ -47,7 +47,7 @@ export default function Navbar() {
                         Login
                     </a>
                     <a
-                        href="/signup"
+                        href="/signup/college"
                         className="text-sm font-medium px-4 py-2 bg-white text-green-500 rounded-md hover:bg-green-500 hover:text-white transition duration-200"
                     >
                         Sign Up
