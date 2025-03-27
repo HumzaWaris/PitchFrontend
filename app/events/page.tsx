@@ -205,7 +205,7 @@ function ModalPopUp({ event, onClose }) {
                         {event.eventTitle || "No Title"}
                     </h1>
                     {Array.isArray(event.tags) && event.tags.length > 0 && (
-                        <TagIcons tags={event.tags} />
+                        <TagIcons tags={event.tags}/>
                     )}
                     {clubName && (
                         <p className="mt-2 text-gray-800">
@@ -220,12 +220,16 @@ function ModalPopUp({ event, onClose }) {
                         </p>
                     )}
                     <p className="text-gray-800 mt-1">
-                        {start.toLocaleDateString()} @{" "}
-                        {start.toLocaleTimeString([], {
-                            hour: "2-digit",
+                        {start.toLocaleString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
                             minute: "2-digit",
+                            hour12: true,
                         })}
                     </p>
+
                     {event.eventDescription && (
                         <p className="text-gray-600 mt-2">
                             {event.eventDescription}
@@ -307,13 +311,12 @@ export default function Events() {
     // If "Weekly", only show events in next 7 days
     const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     // If "Semester", up to May 10, 2025
-    const endOfSemester = new Date(2025, 4, 10);
-
     // Step 1: Filter by time (Weekly/Semester)
     let displayedEvents =
         activeTab === "Weekly"
             ? upcomingEvents.filter((evt) => evt.eventDate <= oneWeekFromNow)
-            : upcomingEvents.filter((evt) => evt.eventDate <= endOfSemester);
+            : upcomingEvents;
+
 
     // Step 2: If we have selected tags, show events that match *ANY* of those tags
     if (selectedTags.length > 0) {
@@ -454,16 +457,19 @@ export default function Events() {
                                             {event.eventTitle || "No Title"}
                                         </h3>
                                         <p className="text-sm text-gray-500 mb-1">
-                                            {event.eventDate.toLocaleDateString()} @{" "}
-                                            {event.eventDate.toLocaleTimeString([], {
-                                                hour: "2-digit",
+                                            {event.eventDate.toLocaleString("en-US", {
+                                                month: "long",
+                                                day: "numeric",
+                                                year: "numeric",
+                                                hour: "numeric",
                                                 minute: "2-digit",
+                                                hour12: true,
                                             })}
                                         </p>
                                         <p className="text-sm text-gray-700">
                                             {event.eventLocation || "No Address"}
                                         </p>
-                                        <TagIcons tags={event.tags || []} />
+                                        <TagIcons tags={event.tags || []}/>
                                     </div>
                                 </div>
                             ))}
