@@ -21,6 +21,59 @@ function Button({ children, onClick, variant = "default" }) {
     );
 }
 
+// A small image carousel that loops through the `images` array.
+// It accepts an optional `imageClassName` prop to control the image's height.
+// By default, grid tiles use a height of 12.5rem (~1.25x h-40).
+function ImageCarousel({ images, imageClassName = "h-[12.5rem]" }) {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    if (!images || images.length === 0) {
+        return (
+            <div className={`w-full ${imageClassName} bg-gray-200 rounded-lg flex items-center justify-center text-gray-500`}>
+                No Image Available
+            </div>
+        );
+    }
+
+    const handleNext = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const handlePrev = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
+    return (
+        <div className="relative">
+            <img
+                src={images[currentIndex]}
+                alt="Housing"
+                className={`w-full object-cover rounded-lg ${imageClassName}`}
+            />
+
+            {/* Show arrows only if there is more than one image */}
+            {images.length > 1 && (
+                <>
+                    <button
+                        onClick={handlePrev}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
+                    >
+                        ◀
+                    </button>
+                    <button
+                        onClick={handleNext}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
+                    >
+                        ▶
+                    </button>
+                </>
+            )}
+        </div>
+    );
+}
+
 // Return TRUE if the listing's bed count matches the selected filter
 function meetsBeds(listingBeds, filterBeds) {
     if (filterBeds === "any") return true;
@@ -64,7 +117,7 @@ export default function Housing() {
 
     // Filter states
     const [filterPrice, setFilterPrice] = useState(2000);
-    const [filterBeds, setFilterBeds] = useState("any");  // "studio", "1", "2", ...
+    const [filterBeds, setFilterBeds] = useState("any"); // "studio", "1", "2", ...
     const [filterBaths, setFilterBaths] = useState("any"); // "1", "1.5", "2", etc.
 
     // 1) Fetch listings from Firestore
@@ -157,6 +210,14 @@ export default function Housing() {
             {/* Navbar */}
             <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
                 <div className="flex space-x-6">
+                    {/* Logo */}
+                    <Link href="/">
+                        <img
+                            src="/images/Huddle_Social_White_Background.png"
+                            alt="Huddle Social Logo"
+                            className="w-10 h-10 rounded-full"
+                        />
+                    </Link>
                     <Link
                         href="/events"
                         className="font-semibold text-gray-700 flex items-center"
@@ -187,8 +248,6 @@ export default function Housing() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredListings.map((listing) => {
                         const urls = imageURLs[listing.id] || [];
-                        const hasImage = urls.length > 0;
-
                         return (
                             <div
                                 key={listing.id}
@@ -201,18 +260,11 @@ export default function Housing() {
                     {listing.sublettingTrue ? "Sublet" : "Available"}
                   </span>
 
-                                    {/* Image */}
-                                    {hasImage ? (
-                                        <img
-                                            src={urls[0]}
-                                            alt="Housing"
-                                            className="w-full h-40 object-cover rounded-lg"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                                            No Image Available
-                                        </div>
-                                    )}
+                                    {/* Image Carousel */}
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                        {/* Using the default height of 12.5rem for grid tiles */}
+                                        <ImageCarousel images={urls} />
+                                    </div>
                                 </div>
 
                                 {/* Housing Name */}
@@ -251,17 +303,15 @@ export default function Housing() {
                                 &times;
                             </button>
 
+                            {/* Image Carousel in the modal */}
                             {(() => {
                                 const selectedURLs = imageURLs[selectedListing.id] || [];
                                 const hasImages = selectedURLs.length > 0;
                                 return hasImages ? (
-                                    <img
-                                        src={selectedURLs[0]}
-                                        alt="Housing"
-                                        className="w-full h-64 object-cover rounded-lg"
-                                    />
+                                    // Here we pass a larger height (20rem) for the modal view
+                                    <ImageCarousel images={selectedURLs} imageClassName="h-[20rem]" />
                                 ) : (
-                                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+                                    <div className="w-full h-[20rem] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
                                         No Image Available
                                     </div>
                                 );
@@ -296,18 +346,13 @@ export default function Housing() {
                                 What's Included
                             </p>
                             <p className="text-gray-800 mt-2">
-                                {selectedListing.includesUtilities ||
-                                selectedListing.includesAmenities
+                                {selectedListing.includesUtilities || selectedListing.includesAmenities
                                     ? `${selectedListing.includesUtilities ? "Utilities Included" : ""} ${
                                         selectedListing.includesUtilities &&
                                         selectedListing.includesAmenities
                                             ? "|"
                                             : ""
-                                    } ${
-                                        selectedListing.includesAmenities
-                                            ? "Amenities Included"
-                                            : ""
-                                    }`
+                                    } ${selectedListing.includesAmenities ? "Amenities Included" : ""}`
                                     : "No utilities or amenities specified"}
                             </p>
 

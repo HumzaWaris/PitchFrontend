@@ -340,6 +340,16 @@ export default function Events() {
             {/* Top Nav */}
             <nav className="flex items-center justify-between bg-white p-4 shadow-md rounded-lg">
                 <div className="flex items-center space-x-5">
+                    {/* Logo */}
+                    <Link href="/">
+                        <Image
+                            src="/images/Huddle_Social_White_Background.png"
+                            alt="Huddle Social Logo"
+                            width={50}
+                            height={50}
+                            className="rounded-full object-cover"
+                        />
+                    </Link>
                     <Link href="/events" className="text-black font-semibold flex items-center">
                         <span className="mr-1">📅</span>
                         Events
@@ -426,7 +436,7 @@ export default function Events() {
                                 <div
                                     key={event.id}
                                     onClick={() => setSelectedEvent(event)}
-                                    className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex items-center space-x-4 cursor-pointer hover:shadow-md transition"
+                                    className=" max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex items-center space-x-4 cursor-pointer hover:shadow-md transition"
                                 >
                                     {event.flyer_image && (
                                         <Image
