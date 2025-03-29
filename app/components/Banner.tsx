@@ -20,7 +20,7 @@ export default function Banner() {
                             Be more engaged with your campus.
                         </h1>
                         <h6 className="mt-4 text-lg font-semibold">
-                            <b>Currently @ Purdue</b>
+                            <b>Currently @ Purdue and IU</b>
                         </h6>
                         <p className="mt-4 text-sm lg:text-base leading-relaxed">
                             Discover events, find subleasing options, and get advice within

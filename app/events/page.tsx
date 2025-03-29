@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // import useRouter if you're on Next 13+ (App Router)
 import { db } from "@/lib/firebaseConfig";
 import {
     collection,
@@ -22,7 +23,6 @@ import BuildIcon from "@mui/icons-material/Build";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import PublicIcon from "@mui/icons-material/Public";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
-
 
 function TagIcons({ tags = [] }) {
     const getIconForTag = (tagName) => {
@@ -57,8 +57,8 @@ function TagIcons({ tags = [] }) {
                     key={index}
                     className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-white"
                 >
-                    {getIconForTag(tag)}
-                </span>
+          {getIconForTag(tag)}
+        </span>
             ))}
         </div>
     );
@@ -88,8 +88,10 @@ function FilterModal({ onClose, selectedTags, setSelectedTags }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black bg-opacity-30" onClick={onClose} />
-            
+            <div
+                className="absolute inset-0 bg-black bg-opacity-30"
+                onClick={onClose}
+            />
             <div className="relative w-11/12 max-w-lg bg-white rounded-lg shadow-lg p-6 z-50">
                 <button
                     className="absolute top-2 right-2 text-2xl text-black font-bold"
@@ -97,8 +99,10 @@ function FilterModal({ onClose, selectedTags, setSelectedTags }) {
                 >
                     &times;
                 </button>
-                
-                <h2 className="text-black text-2xl font-bold text-center mb-6">Choose Event Types</h2>
+
+                <h2 className="text-black text-2xl font-bold text-center mb-6">
+                    Choose Event Types
+                </h2>
 
                 <div className="flex flex-col space-y-3">
                     {allFilters.map((filter) => {
@@ -205,7 +209,7 @@ function ModalPopUp({ event, onClose }) {
                         {event.eventTitle || "No Title"}
                     </h1>
                     {Array.isArray(event.tags) && event.tags.length > 0 && (
-                        <TagIcons tags={event.tags}/>
+                        <TagIcons tags={event.tags} />
                     )}
                     {clubName && (
                         <p className="mt-2 text-gray-800">
@@ -231,9 +235,7 @@ function ModalPopUp({ event, onClose }) {
                     </p>
 
                     {event.eventDescription && (
-                        <p className="text-gray-600 mt-2">
-                            {event.eventDescription}
-                        </p>
+                        <p className="text-gray-600 mt-2">{event.eventDescription}</p>
                     )}
                     {mapUrl && (
                         <div className="mt-4">
@@ -262,6 +264,7 @@ function ModalPopUp({ event, onClose }) {
 }
 
 export default function Events() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("Semester");
     const [eventsData, setEventsData] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -310,30 +313,23 @@ export default function Events() {
 
     // If "Weekly", only show events in next 7 days
     const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    // If "Semester", up to May 10, 2025
-    // Step 1: Filter by time (Weekly/Semester)
     let displayedEvents =
         activeTab === "Weekly"
             ? upcomingEvents.filter((evt) => evt.eventDate <= oneWeekFromNow)
             : upcomingEvents;
 
-
-    // Step 2: If we have selected tags, show events that match *ANY* of those tags
+    // Tag-based filter
     if (selectedTags.length > 0) {
         displayedEvents = displayedEvents.filter((event) => {
             if (!Array.isArray(event.tags)) return false;
-            // Convert each tag to lower-case
             const eventTagsLC = event.tags.map((t) => t.toLowerCase());
-            // We want to see if there's an overlap with selectedTags
             return selectedTags.some((sel) => eventTagsLC.includes(sel));
         });
     }
 
     // Group final list by weekday
     const eventsByDay = displayedEvents.reduce((acc, event) => {
-        const day = event.eventDate.toLocaleDateString("en-US", {
-            weekday: "long",
-        });
+        const day = event.eventDate.toLocaleDateString("en-US", { weekday: "long" });
         if (!acc[day]) acc[day] = [];
         acc[day].push(event);
         return acc;
@@ -341,44 +337,38 @@ export default function Events() {
 
     return (
         <div className="min-h-screen bg-white">
-            <nav className="flex items-center justify-between px-6 py-4 bg-white">
+            {/* Top Nav */}
+            <nav className="flex items-center justify-between bg-white p-4 shadow-md rounded-lg">
                 <div className="flex items-center space-x-5">
-                    <Image
-                        src="/images/penguin.png"
-                        alt="Logo"
-                        width={32}
-                        height={32}
-                        className="object-contain"
-                    />
-                    <div className="flex items-center space-x-6">
-                        <Link
-                            href="/events"
-                            className="text-black font-semibold flex items-center"
-                        >
-                            <span className="mr-1">📅</span>
-                            Events
-                        </Link>
-                        <Link
-                            href="/housing"
-                            className="text-black font-semibold flex items-center"
-                        >
-                            <span className="mr-1">🏠</span>
-                            Housing
-                        </Link>
-                    </div>
+                    <Link href="/events" className="text-black font-semibold flex items-center">
+                        <span className="mr-1">📅</span>
+                        Events
+                    </Link>
+                    <Link href="/housing" className="text-black font-semibold flex items-center">
+                        <span className="mr-1">🏠</span>
+                        Housing
+                    </Link>
                 </div>
 
-                <button
-                    onClick={() => {}}
-                    className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold"
-                >
-                    {displayName}
-                </button>
+                {/* If displayName is 'User', show Sign In => route to /signup,
+            otherwise show "Hello, <Name>" */}
+                {displayName === "User" ? (
+                    <button
+                        onClick={() => router.push("/signup")}
+                        className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold"
+                    >
+                        Sign In
+                    </button>
+                ) : (
+                    <div className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold">
+                        Hello, {displayName}
+                    </div>
+                )}
             </nav>
 
-            <header className="flex items-center justify-between px-6 mt-4">
-                <div className="flex items-center space-x-6">
-                    <h1 className="text-4xl font-extrabold text-black">Events</h1>
+            <div className="py-12 container mx-auto px-6 lg:px-12">
+                <div className="text-left mb-6 flex items-center justify-between">
+                    <h3 className="text-4xl font-bold text-gray-800">Events</h3>
                     <div className="flex items-center space-x-3">
                         <button
                             onClick={() => setActiveTab("Weekly")}
@@ -400,41 +390,36 @@ export default function Events() {
                         >
                             Semester
                         </button>
+                        <button
+                            onClick={() => setShowFilterModal(true)}
+                            className="px-4 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 mr-1"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M3 4a1 1 0 011-1h16a1
+                   1 0 011 1v2a1 1 0 01-.293.707l-5.414
+                   5.414A1 1 0 0014 12.414V19l-4
+                   2v-8.586a1 1 0 00-.293-.707L4.293
+                   6.707A1 1 0 014 6V4z"
+                                />
+                            </svg>
+                            All Filters
+                        </button>
                     </div>
                 </div>
-                
-                <button
-                    onClick={() => setShowFilterModal(true)}
-                    className="px-4 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M3 4a1 1 0 011-1h16a1 
-                            1 0 011 1v2a1 1 0 01-.293.707l-5.414 
-                            5.414A1 1 0 0014 12.414V19l-4 
-                            2v-8.586a1 1 0 00-.293-.707L4.293 
-                            6.707A1 1 0 014 6V4z"
-                        />
-                    </svg>
-                    All Filters
-                </button>
-            </header>
 
-            <div className="px-6 py-6">
                 {Object.entries(eventsByDay).map(([day, events]) => (
                     <div key={day} className="mb-8">
-                        <h2 className="text-3xl font-bold text-black mb-2">
-                            {day}
-                        </h2>
+                        <h2 className="text-3xl font-bold text-black mb-2">{day}</h2>
                         <div className="border-b border-dotted border-gray-300 mb-4"></div>
                         <div className="space-y-6">
                             {events.map((event) => (
@@ -469,7 +454,7 @@ export default function Events() {
                                         <p className="text-sm text-gray-700">
                                             {event.eventLocation || "No Address"}
                                         </p>
-                                        <TagIcons tags={event.tags || []}/>
+                                        <TagIcons tags={event.tags || []} />
                                     </div>
                                 </div>
                             ))}
@@ -478,8 +463,10 @@ export default function Events() {
                 ))}
             </div>
 
+            {/* Event details pop-up */}
             <ModalPopUp event={selectedEvent} onClose={() => setSelectedEvent(null)} />
 
+            {/* Tag-based filter modal */}
             {showFilterModal && (
                 <FilterModal
                     onClose={() => setShowFilterModal(false)}

@@ -51,8 +51,12 @@ export default function Housing() {
     const [listings, setListings] = useState([]);
     const [filteredListings, setFilteredListings] = useState([]);
     const [selectedListing, setSelectedListing] = useState(null);
+
+    // For fetching the "Posted by" info
     const [posterName, setPosterName] = useState("");
     const [posterEmail, setPosterEmail] = useState("");
+
+    // For images
     const [imageURLs, setImageURLs] = useState({});
 
     // Controls the visibility of the Filters bottom sheet
@@ -103,14 +107,15 @@ export default function Housing() {
         });
     }, [listings]);
 
-    // Fetch user details when modal opens
+    // 3) Fetch user details (from "Users" collection) when modal opens
     useEffect(() => {
         const fetchUserDetails = async () => {
             if (selectedListing?.userId) {
-                const userRef = doc(db, "Users", selectedListing.userId);
+                const userRef = doc(db, "users", selectedListing.userId);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
-                    setPosterName(userSnap.data().name || "Unknown User");
+                    // Use displayName instead of name
+                    setPosterName(userSnap.data().displayName || "Unknown User");
                     setPosterEmail(userSnap.data().email || "Not Available");
                 } else {
                     setPosterName("Unknown User");
@@ -126,7 +131,6 @@ export default function Housing() {
     // Filtering logic
     const handleApply = () => {
         const underPrice = listings.filter((listing) => {
-            // If your Firestore has numeric fields for listing.myPrice, listing.bedsCount, listing.bathsCount
             const priceOk = listing.myPrice <= filterPrice;
             const bedsOk = meetsBeds(listing.bedsCount, filterBeds);
             const bathsOk = meetsBaths(listing.bathsCount, filterBaths);
@@ -137,7 +141,6 @@ export default function Housing() {
     };
 
     const handleClear = () => {
-        // Reset all filters to "any" or default
         setFilterPrice(2000);
         setFilterBeds("any");
         setFilterBaths("any");
