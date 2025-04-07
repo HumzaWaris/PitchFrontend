@@ -22,14 +22,14 @@ function Button({ children, onClick, variant = "default" }) {
 }
 
 // A small image carousel that loops through the `images` array.
-// It accepts an optional `imageClassName` prop to control the image's height.
-// By default, grid tiles use a height of 12.5rem (~1.25x h-40).
-function ImageCarousel({ images, imageClassName = "h-[12.5rem]" }) {
+function ImageCarousel({ images, imageClassName = "h-[25rem]" }) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (!images || images.length === 0) {
         return (
-            <div className={`w-full ${imageClassName} bg-gray-200 rounded-lg flex items-center justify-center text-gray-500`}>
+            <div
+                className={`w-full ${imageClassName} bg-gray-200 rounded-lg flex items-center justify-center text-gray-500`}
+            >
                 No Image Available
             </div>
         );
@@ -74,28 +74,24 @@ function ImageCarousel({ images, imageClassName = "h-[12.5rem]" }) {
     );
 }
 
-// Return TRUE if the listing's bed count matches the selected filter
+// Helpers for filters
 function meetsBeds(listingBeds, filterBeds) {
     if (filterBeds === "any") return true;
     if (filterBeds === "studio") {
-        // We assume 'studio' means listingBeds === 0
         return listingBeds === 0;
     }
     if (filterBeds === "4+") {
         return listingBeds >= 4;
     }
-    // Otherwise parse the integer
     const bedNum = parseInt(filterBeds, 10);
     return listingBeds === bedNum;
 }
 
-// Return TRUE if the listing's bath count matches the selected filter
 function meetsBaths(listingBaths, filterBaths) {
     if (filterBaths === "any") return true;
     if (filterBaths === "4+") {
         return listingBaths >= 4;
     }
-    // Otherwise parse the float
     const bathNum = parseFloat(filterBaths);
     return listingBaths === bathNum;
 }
@@ -117,8 +113,8 @@ export default function Housing() {
 
     // Filter states
     const [filterPrice, setFilterPrice] = useState(2000);
-    const [filterBeds, setFilterBeds] = useState("any"); // "studio", "1", "2", ...
-    const [filterBaths, setFilterBaths] = useState("any"); // "1", "1.5", "2", etc.
+    const [filterBeds, setFilterBeds] = useState("any");
+    const [filterBaths, setFilterBaths] = useState("any");
 
     // 1) Fetch listings from Firestore
     useEffect(() => {
@@ -136,7 +132,7 @@ export default function Housing() {
         fetchListings();
     }, []);
 
-    // 2) Convert each short file name to a real download URL
+    // 2) Convert file names to download URLs
     useEffect(() => {
         const storage = getStorage();
         listings.forEach(async (listing) => {
@@ -160,15 +156,14 @@ export default function Housing() {
         });
     }, [listings]);
 
-    // 3) Fetch user details (from "Users" collection) when modal opens
+    // 3) Fetch user details when modal opens
     useEffect(() => {
         const fetchUserDetails = async () => {
             if (selectedListing?.userId) {
                 const userRef = doc(db, "users", selectedListing.userId);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
-                    // Use displayName instead of name
-                    setPosterName(userSnap.data().displayName || "Unknown User");
+                    setPosterName(userSnap.data().displayname || "Unknown User");
                     setPosterEmail(userSnap.data().email || "Not Available");
                 } else {
                     setPosterName("Unknown User");
@@ -218,16 +213,10 @@ export default function Housing() {
                             className="w-10 h-10 rounded-full"
                         />
                     </Link>
-                    <Link
-                        href="/events"
-                        className="font-semibold text-gray-700 flex items-center"
-                    >
+                    <Link href="/events" className="font-semibold text-gray-700 flex items-center">
                         📅 Events
                     </Link>
-                    <Link
-                        href="/housing"
-                        className="font-semibold text-gray-700 flex items-center"
-                    >
+                    <Link href="/housing" className="font-semibold text-gray-700 flex items-center">
                         🏠 Housing
                     </Link>
                 </div>
@@ -251,41 +240,62 @@ export default function Housing() {
                         return (
                             <div
                                 key={listing.id}
-                                className="bg-white shadow-md rounded-lg p-4 cursor-pointer hover:shadow-lg transition"
+                                className="relative bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
                                 onClick={() => setSelectedListing(listing)}
                             >
-                                <div className="relative">
-                                    {/* Top Left Label (Sublet or Available) */}
+                                {/* "Sublet" label if sublettingTrue */}
+                                {listing.sublettingTrue && (
                                     <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                    {listing.sublettingTrue ? "Sublet" : "Available"}
+                    Sublet
                   </span>
+                                )}
 
-                                    {/* Image Carousel */}
-                                    <div onClick={(e) => e.stopPropagation()}>
-                                        {/* Using the default height of 12.5rem for grid tiles */}
-                                        <ImageCarousel images={urls} />
-                                    </div>
+                                {/* Image Carousel */}
+                                <div onClick={(e) => e.stopPropagation()}>
+                                    <ImageCarousel images={urls} />
                                 </div>
 
-                                {/* Housing Name */}
-                                <h5 className="mt-4 text-lg font-semibold text-gray-800">
-                                    {listing.myHousingName}
-                                </h5>
+                                {/* Listing Info */}
+                                <div className="p-4">
+                                    {/* Name */}
+                                    <h2 className="text-lg font-bold text-gray-800">
+                                        {listing.myHousingName}
+                                    </h2>
 
-                                {/* Address & Gender in One Row */}
-                                <div className="flex justify-between items-center">
+                                    {/* Address */}
                                     <p className="text-sm text-gray-600">{listing.placeName}</p>
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${
-                                            listing.genderType === "Male"
-                                                ? "bg-blue-500"
-                                                : listing.genderType === "Female"
-                                                    ? "bg-pink-500"
-                                                    : "bg-purple-500"
-                                        }`}
-                                    >
-                    {listing.genderType || "Co-ed"}
-                  </span>
+
+                                    {/* Beds, Baths, and Price */}
+                                    <p className="text-sm text-gray-700 mt-2">
+                                        {listing.bedsCount} bed
+                                        {listing.bedsCount > 1 ? "s" : ""}, {listing.bathsCount} bath
+                                        {listing.bathsCount > 1 ? "s" : ""} | ${listing.myPrice} per person
+                                    </p>
+
+                                    {/* Move-in Date + Gender on the right */}
+                                    <div className="flex justify-between items-center mt-2">
+                                        <p className="text-green-600 text-sm">
+                                            {listing.moveInDate
+                                                ? listing.moveInDate
+                                                    .toDate()
+                                                    .toLocaleDateString("en-US", {
+                                                        month: "long",
+                                                        year: "numeric",
+                                                    })
+                                                : "No move-in date"}
+                                        </p>
+                                        <span
+                                            className={`text-sm font-semibold px-3 py-1 rounded-full text-white ${
+                                                listing.genderType === "Male"
+                                                    ? "bg-blue-500"
+                                                    : listing.genderType === "Female"
+                                                        ? "bg-pink-500"
+                                                        : "bg-purple-500"
+                                            }`}
+                                        >
+                      {listing.genderType || "Co-ed"}
+                    </span>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -308,7 +318,6 @@ export default function Housing() {
                                 const selectedURLs = imageURLs[selectedListing.id] || [];
                                 const hasImages = selectedURLs.length > 0;
                                 return hasImages ? (
-                                    // Here we pass a larger height (20rem) for the modal view
                                     <ImageCarousel images={selectedURLs} imageClassName="h-[20rem]" />
                                 ) : (
                                     <div className="w-full h-[20rem] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
@@ -346,13 +355,16 @@ export default function Housing() {
                                 What's Included
                             </p>
                             <p className="text-gray-800 mt-2">
-                                {selectedListing.includesUtilities || selectedListing.includesAmenities
+                                {selectedListing.includesUtilities ||
+                                selectedListing.includesAmenities
                                     ? `${selectedListing.includesUtilities ? "Utilities Included" : ""} ${
                                         selectedListing.includesUtilities &&
                                         selectedListing.includesAmenities
                                             ? "|"
                                             : ""
-                                    } ${selectedListing.includesAmenities ? "Amenities Included" : ""}`
+                                    } ${
+                                        selectedListing.includesAmenities ? "Amenities Included" : ""
+                                    }`
                                     : "No utilities or amenities specified"}
                             </p>
 
@@ -360,9 +372,7 @@ export default function Housing() {
                             <hr className="my-4 border-gray-300" />
 
                             {/* Contact */}
-                            <p className="text-lg font-semibold text-gray-500 uppercase">
-                                Contact
-                            </p>
+                            <p className="text-lg font-semibold text-gray-500 uppercase">Contact</p>
                             <p className="text-gray-800 mt-2">
                                 <strong>Posted by:</strong> {posterName}
                             </p>
