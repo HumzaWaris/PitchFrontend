@@ -1,495 +1,482 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { db } from "@/lib/firebaseConfig";
+import { useRouter } from "next/navigation";
+import { db, auth } from "@/lib/firebaseConfig";
+import { signOut } from "firebase/auth";
 import { collection, doc, getDocs, getDoc } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
-// A simple button component for convenience
-function Button({ children, onClick, variant = "default" }) {
-    const baseClass =
-        "px-4 py-2 text-sm font-semibold rounded-md transition-colors";
-    const variants = {
-        default: "bg-blue-500 text-white hover:bg-blue-600",
-        outline: "border border-gray-300 text-gray-700 hover:bg-gray-100",
-    };
-    return (
-        <button className={`${baseClass} ${variants[variant]}`} onClick={onClick}>
-            {children}
-        </button>
-    );
-}
-
-// A small image carousel that loops through the `images` array.
 function ImageCarousel({ images, imageClassName = "h-[25rem]" }) {
-    const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-    if (!images || images.length === 0) {
-        return (
-            <div
-                className={`w-full ${imageClassName} bg-gray-200 rounded-lg flex items-center justify-center text-gray-500`}
-            >
-                No Image Available
-            </div>
-        );
-    }
-
-    const handleNext = (e) => {
-        e.stopPropagation();
-        setCurrentIndex((prev) => (prev + 1) % images.length);
-    };
-
-    const handlePrev = (e) => {
-        e.stopPropagation();
-        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-    };
-
+  if (!images || images.length === 0) {
     return (
-        <div className="relative">
-            <img
-                src={images[currentIndex]}
-                alt="Housing"
-                className={`w-full object-cover rounded-lg ${imageClassName}`}
-            />
-
-            {/* Show arrows only if there is more than one image */}
-            {images.length > 1 && (
-                <>
-                    <button
-                        onClick={handlePrev}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
-                    >
-                        ◀
-                    </button>
-                    <button
-                        onClick={handleNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
-                    >
-                        ▶
-                    </button>
-                </>
-            )}
-        </div>
+      <div
+        className={`w-full ${imageClassName} bg-gray-200 rounded-lg flex items-center justify-center text-gray-500`}
+      >
+        No Image Available
+      </div>
     );
+  }
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((p) => (p + 1) % images.length);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((p) => (p - 1 + images.length) % images.length);
+  };
+
+  return (
+    <div className="relative">
+      <img
+        src={images[currentIndex]}
+        alt="Housing"
+        className={`w-full object-cover rounded-lg ${imageClassName}`}
+      />
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={handlePrev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
+          >
+            ◀
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white text-gray-700 px-2 py-1 rounded-full shadow"
+          >
+            ▶
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
-// Helpers for filters
 function meetsBeds(listingBeds, filterBeds) {
-    if (filterBeds === "any") return true;
-    if (filterBeds === "studio") {
-        return listingBeds === 0;
-    }
-    if (filterBeds === "4+") {
-        return listingBeds >= 4;
-    }
-    const bedNum = parseInt(filterBeds, 10);
-    return listingBeds === bedNum;
+  if (filterBeds === "any") return true;
+  if (filterBeds === "studio") return listingBeds === 0;
+  if (filterBeds === "4+") return listingBeds >= 4;
+  return listingBeds === parseInt(filterBeds, 10);
 }
 
 function meetsBaths(listingBaths, filterBaths) {
-    if (filterBaths === "any") return true;
-    if (filterBaths === "4+") {
-        return listingBaths >= 4;
-    }
-    const bathNum = parseFloat(filterBaths);
-    return listingBaths === bathNum;
+  if (filterBaths === "any") return true;
+  if (filterBaths === "4+") return listingBaths >= 4;
+  return listingBaths === parseFloat(filterBaths);
+}
+
+function UserOptionsPopup({ onLogout }) {
+  return (
+    <div className="absolute top-full right-0 mt-2 w-32 bg-white border border-gray-300 rounded shadow-md p-2 z-50">
+      <button
+        onClick={onLogout}
+        className="w-full text-black text-sm font-semibold hover:text-red-600"
+      >
+        Logout
+      </button>
+    </div>
+  );
 }
 
 export default function Housing() {
-    const [listings, setListings] = useState([]);
-    const [filteredListings, setFilteredListings] = useState([]);
-    const [selectedListing, setSelectedListing] = useState(null);
+  const router = useRouter();
+  const [listings, setListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [posterName, setPosterName] = useState("");
+  const [posterEmail, setPosterEmail] = useState("");
+  const [imageURLs, setImageURLs] = useState({});
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filterPrice, setFilterPrice] = useState(2000);
+  const [filterBeds, setFilterBeds] = useState("any");
+  const [filterBaths, setFilterBaths] = useState("any");
+  const [displayName, setDisplayName] = useState("User");
+  const [showUserOptions, setShowUserOptions] = useState(false);
 
-    // For fetching the "Posted by" info
-    const [posterName, setPosterName] = useState("");
-    const [posterEmail, setPosterEmail] = useState("");
+  useEffect(() => {
+    const storedName = localStorage.getItem("displayName");
+    if (storedName) setDisplayName(storedName);
+  }, []);
 
-    // For images
-    const [imageURLs, setImageURLs] = useState({});
+  useEffect(() => {
+    const fetchListings = async () => {
+      const qs = await getDocs(collection(db, "Purdue University - Housing"));
+      const data = qs.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setListings(data);
+      setFilteredListings(data);
+    };
+    fetchListings();
+  }, []);
 
-    // Controls the visibility of the Filters bottom sheet
-    const [showFilters, setShowFilters] = useState(false);
-
-    // Filter states
-    const [filterPrice, setFilterPrice] = useState(2000);
-    const [filterBeds, setFilterBeds] = useState("any");
-    const [filterBaths, setFilterBaths] = useState("any");
-
-    // 1) Fetch listings from Firestore
-    useEffect(() => {
-        const fetchListings = async () => {
-            const querySnapshot = await getDocs(
-                collection(db, "Purdue University - Housing")
-            );
-            const data = querySnapshot.docs.map((docSnap) => ({
-                id: docSnap.id,
-                ...docSnap.data(),
-            }));
-            setListings(data);
-            setFilteredListings(data);
-        };
-        fetchListings();
-    }, []);
-
-    // 2) Convert file names to download URLs
-    useEffect(() => {
-        const storage = getStorage();
-        listings.forEach(async (listing) => {
-            if (!Array.isArray(listing.imagePaths)) return;
-            const validPaths = listing.imagePaths.filter((p) => p.trim() !== "");
-            const urls = [];
-            for (const fileName of validPaths) {
-                const fileRef = ref(storage, `Purdue University/housing/${fileName}`);
-                try {
-                    const downloadURL = await getDownloadURL(fileRef);
-                    urls.push(downloadURL);
-                } catch (error) {
-                    if (error.code === "storage/object-not-found") {
-                        console.warn(`File not found in Storage: ${fileName}`);
-                    } else {
-                        console.error("Error fetching download URL:", error);
-                    }
-                }
-            }
-            setImageURLs((prev) => ({ ...prev, [listing.id]: urls }));
-        });
-    }, [listings]);
-
-    // 3) Fetch user details when modal opens
-    useEffect(() => {
-        const fetchUserDetails = async () => {
-            if (selectedListing?.userId) {
-                const userRef = doc(db, "users", selectedListing.userId);
-                const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    setPosterName(userSnap.data().displayname || "Unknown User");
-                    setPosterEmail(userSnap.data().email || "Not Available");
-                } else {
-                    setPosterName("Unknown User");
-                    setPosterEmail("Not Available");
-                }
-            }
-        };
-        if (selectedListing) {
-            fetchUserDetails();
+  useEffect(() => {
+    const storage = getStorage();
+    listings.forEach(async (l) => {
+      if (!Array.isArray(l.imagePaths)) return;
+      const paths = l.imagePaths.filter((p) => p.trim() !== "");
+      const urls = [];
+      for (const fileName of paths) {
+        const fileRef = ref(storage, `Purdue University/housing/${fileName}`);
+        try {
+          const url = await getDownloadURL(fileRef);
+          urls.push(url);
+        } catch (e) {
+          if (e.code !== "storage/object-not-found") console.error(e);
         }
-    }, [selectedListing]);
+      }
+      setImageURLs((p) => ({ ...p, [l.id]: urls }));
+    });
+  }, [listings]);
 
-    // Filtering logic
-    const handleApply = () => {
-        const underPrice = listings.filter((listing) => {
-            const priceOk = listing.myPrice <= filterPrice;
-            const bedsOk = meetsBeds(listing.bedsCount, filterBeds);
-            const bathsOk = meetsBaths(listing.bathsCount, filterBaths);
-            return priceOk && bedsOk && bathsOk;
-        });
-        setFilteredListings(underPrice);
-        setShowFilters(false);
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (selectedListing?.userId) {
+        const uRef = doc(db, "users", selectedListing.userId);
+        const snap = await getDoc(uRef);
+        if (snap.exists()) {
+          setPosterName(snap.data().displayname || "Unknown User");
+          setPosterEmail(snap.data().email || "Not Available");
+        } else {
+          setPosterName("Unknown User");
+          setPosterEmail("Not Available");
+        }
+      }
     };
+    if (selectedListing) fetchUser();
+  }, [selectedListing]);
 
-    const handleClear = () => {
-        setFilterPrice(2000);
-        setFilterBeds("any");
-        setFilterBaths("any");
-        setFilteredListings(listings);
-        setShowFilters(false);
-    };
+  const applyFilters = () => {
+    const res = listings.filter((l) => {
+      const priceOk = l.myPrice <= filterPrice;
+      const bedsOk = meetsBeds(l.bedsCount, filterBeds);
+      const bathsOk = meetsBaths(l.bathsCount, filterBaths);
+      return priceOk && bedsOk && bathsOk;
+    });
+    setFilteredListings(res);
+    setShowFilterModal(false);
+  };
 
-    const handleCancel = () => {
-        setShowFilters(false);
-    };
+  const clearFilters = () => {
+    setFilterPrice(2000);
+    setFilterBeds("any");
+    setFilterBaths("any");
+    setFilteredListings(listings);
+    setShowFilterModal(false);
+  };
 
-    return (
-        <section id="housing" className="min-h-screen bg-white">
-            {/* Navbar */}
-            <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
-                <div className="flex space-x-6">
-                    {/* Logo */}
-                    <Link href="/">
-                        <img
-                            src="/images/Huddle_Social_White_Background.png"
-                            alt="Huddle Social Logo"
-                            className="w-10 h-10 rounded-full"
-                        />
-                    </Link>
-                    <Link href="/events" className="font-semibold text-gray-700 flex items-center">
-                        📅 Events
-                    </Link>
-                    <Link href="/housing" className="font-semibold text-gray-700 flex items-center">
-                        🏠 Housing
-                    </Link>
-                </div>
-                {/* Right side => Filters button */}
-                <div>
-                    <Button variant="outline" onClick={() => setShowFilters(true)}>
-                        ⚙️ Filters
-                    </Button>
-                </div>
-            </nav>
+  const handleLogout = async () => {
+    await signOut(auth);
+    localStorage.removeItem("displayName");
+    router.push("/");
+  };
 
-            <div className="py-12 container mx-auto px-6 lg:px-12">
-                <div className="text-left mb-6">
-                    <h3 className="text-4xl font-bold text-gray-800">Housing</h3>
-                </div>
+  return (
+    <section id="housing" className="min-h-screen bg-white">
+      <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
+        <div className="flex space-x-6">
+          <Link href="/">
+            <Image
+              src="/images/Huddle_Social_White_Background.png"
+              alt="Huddle Social Logo"
+              width={40}
+              height={40}
+              className="rounded-full object-cover"
+            />
+          </Link>
+          <Link
+            href="/events"
+            className="font-semibold text-black flex items-center hover:scale-105 transition"
+          >
+            <span className="mr-1">📅</span>Events
+          </Link>
+          <Link
+            href="/housing"
+            className="font-semibold text-black flex items-center hover:scale-105 transition"
+          >
+            <span className="mr-1">🏠</span>Housing
+          </Link>
+        </div>
+        {displayName === "User" ? (
+          <button
+            onClick={() => router.push("/login")}
+            className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold hover:scale-105 transition"
+          >
+            Sign In
+          </button>
+        ) : (
+          <div
+            className="relative cursor-pointer hover:scale-105 transition"
+            onClick={() => setShowUserOptions(!showUserOptions)}
+          >
+            <div className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold">
+              {displayName}
+            </div>
+            {showUserOptions && <UserOptionsPopup onLogout={handleLogout} />}
+          </div>
+        )}
+      </nav>
 
-                {/* Listings Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredListings.map((listing) => {
-                        const urls = imageURLs[listing.id] || [];
-                        return (
-                            <div
-                                key={listing.id}
-                                className="relative bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
-                                onClick={() => setSelectedListing(listing)}
-                            >
-                                {/* "Sublet" label if sublettingTrue */}
-                                {listing.sublettingTrue && (
-                                    <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+      <div className="py-12 container mx-auto px-6 lg:px-12">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-4xl font-bold text-black">Housing</h3>
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-5.414 5.414A1 1 0 0014 12.414V19l-4 2v-8.586a1 1 0 00-.293-.707L4.293 6.707A1 1 0 014 6V4z"
+              />
+            </svg>
+            All Filters
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredListings.map((l) => {
+            const urls = imageURLs[l.id] || [];
+            return (
+              <div
+                key={l.id}
+                className="relative bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+                onClick={() => setSelectedListing(l)}
+              >
+                {l.sublettingTrue && (
+                  <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
                     Sublet
                   </span>
-                                )}
-
-                                {/* Image Carousel */}
-                                <div onClick={(e) => e.stopPropagation()}>
-                                    <ImageCarousel images={urls} />
-                                </div>
-
-                                {/* Listing Info */}
-                                <div className="p-4">
-                                    {/* Name */}
-                                    <h2 className="text-lg font-bold text-gray-800">
-                                        {listing.myHousingName}
-                                    </h2>
-
-                                    {/* Address */}
-                                    <p className="text-sm text-gray-600">{listing.placeName}</p>
-
-                                    {/* Beds, Baths, and Price */}
-                                    <p className="text-sm text-gray-700 mt-2">
-                                        {listing.bedsCount} bed
-                                        {listing.bedsCount > 1 ? "s" : ""}, {listing.bathsCount} bath
-                                        {listing.bathsCount > 1 ? "s" : ""} | ${listing.myPrice} per person
-                                    </p>
-
-                                    {/* Move-in Date + Gender on the right */}
-                                    <div className="flex justify-between items-center mt-2">
-                                        <p className="text-green-600 text-sm">
-                                            {listing.moveInDate
-                                                ? listing.moveInDate
-                                                    .toDate()
-                                                    .toLocaleDateString("en-US", {
-                                                        month: "long",
-                                                        year: "numeric",
-                                                    })
-                                                : "No move-in date"}
-                                        </p>
-                                        <span
-                                            className={`text-sm font-semibold px-3 py-1 rounded-full text-white ${
-                                                listing.genderType === "Male"
-                                                    ? "bg-blue-500"
-                                                    : listing.genderType === "Female"
-                                                        ? "bg-pink-500"
-                                                        : "bg-purple-500"
-                                            }`}
-                                        >
-                      {listing.genderType || "Co-ed"}
-                    </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                )}
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ImageCarousel images={urls} />
                 </div>
+                <div className="p-4">
+                  <h2 className="text-lg font-bold text-black">{l.myHousingName}</h2>
+                  <p className="text-sm text-gray-600">{l.placeName}</p>
+                  <p className="text-sm text-gray-800 mt-2">
+                    {l.bedsCount} bed{l.bedsCount > 1 ? "s" : ""},{" "}
+                    {l.bathsCount} bath{l.bathsCount > 1 ? "s" : ""} | ${l.myPrice} per person
+                  </p>
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-green-600 text-sm">
+                      {l.moveInDate
+                        ? l.moveInDate.toDate().toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "No move-in date"}
+                    </p>
+                    <span
+                      className={`text-sm font-semibold px-3 py-1 rounded-full text-white ${
+                        l.genderType === "Male"
+                          ? "bg-blue-500"
+                          : l.genderType === "Female"
+                          ? "bg-pink-500"
+                          : "bg-purple-500"
+                      }`}
+                    >
+                      {l.genderType || "Co-ed"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-                {/* Bottom Sheet Modal (Selected Listing) */}
-                {selectedListing && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end z-50">
-                        <div className="bg-white w-full max-w-3xl rounded-t-2xl p-6 relative max-h-[90vh] overflow-y-auto">
-                            <button
-                                onClick={() => setSelectedListing(null)}
-                                className="absolute top-4 right-4 text-gray-700 text-xl"
-                            >
-                                &times;
-                            </button>
+        {selectedListing && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setSelectedListing(null)}
+          >
+            <div
+              className="relative bg-white w-11/12 max-w-3xl rounded-md shadow-lg p-8 pt-10 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedListing(null)}
+                className="absolute top-3 right-3 text-black text-3xl font-bold hover:scale-110 transition"
+              >
+                &times;
+              </button>
 
-                            {/* Image Carousel in the modal */}
-                            {(() => {
-                                const selectedURLs = imageURLs[selectedListing.id] || [];
-                                const hasImages = selectedURLs.length > 0;
-                                return hasImages ? (
-                                    <ImageCarousel images={selectedURLs} imageClassName="h-[20rem]" />
-                                ) : (
-                                    <div className="w-full h-[20rem] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
-                                        No Image Available
-                                    </div>
-                                );
-                            })()}
+              {(() => {
+                const urls = imageURLs[selectedListing.id] || [];
+                return urls.length ? (
+                  <ImageCarousel images={urls} imageClassName="h-[20rem]" />
+                ) : (
+                  <div className="w-full h-[20rem] bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+                    No Image Available
+                  </div>
+                );
+              })()}
 
-                            {/* Housing Name */}
-                            <h2 className="text-3xl font-semibold mt-6 text-gray-800">
-                                {selectedListing.myHousingName}
-                            </h2>
+              <h2 className="text-3xl font-semibold mt-6 text-black">
+                {selectedListing.myHousingName}
+              </h2>
+              <p className="text-xl font-semibold text-black mt-2">
+                ${selectedListing.myPrice} per person
+              </p>
 
-                            {/* Price & Utilities/Amenities */}
-                            <p className="text-xl font-semibold text-gray-700 mt-2">
-                                ${selectedListing.myPrice} per person
-                            </p>
+              <hr className="my-4 border-gray-300" />
 
-                            {/* Separator */}
-                            <hr className="my-4 border-gray-300" />
+              <p className="text-lg font-semibold text-black uppercase">Other Information</p>
+              <p className="mt-2 text-black">
+                {selectedListing.descriptionText || "No description provided"}
+              </p>
 
-                            {/* Other Information */}
-                            <p className="text-lg font-semibold text-gray-500 uppercase">
-                                Other Information
-                            </p>
-                            <div className="bg-gray-100 p-4 rounded-lg mt-2">
-                                {selectedListing.descriptionText || "No description provided"}
-                            </div>
+              <hr className="my-4 border-gray-300" />
 
-                            {/* Separator */}
-                            <hr className="my-4 border-gray-300" />
+              <p className="text-lg font-semibold text-black uppercase">What's Included</p>
+              <p className="text-black mt-2">
+                {selectedListing.includesUtilities || selectedListing.includesAmenities
+                  ? `${selectedListing.includesUtilities ? "Utilities Included" : ""}${
+                      selectedListing.includesUtilities && selectedListing.includesAmenities
+                        ? " | "
+                        : ""
+                    }${selectedListing.includesAmenities ? "Amenities Included" : ""}`
+                  : "No utilities or amenities specified"}
+              </p>
 
-                            {/* What's Included */}
-                            <p className="text-lg font-semibold text-gray-500 uppercase">
-                                What's Included
-                            </p>
-                            <p className="text-gray-800 mt-2">
-                                {selectedListing.includesUtilities ||
-                                selectedListing.includesAmenities
-                                    ? `${selectedListing.includesUtilities ? "Utilities Included" : ""} ${
-                                        selectedListing.includesUtilities &&
-                                        selectedListing.includesAmenities
-                                            ? "|"
-                                            : ""
-                                    } ${
-                                        selectedListing.includesAmenities ? "Amenities Included" : ""
-                                    }`
-                                    : "No utilities or amenities specified"}
-                            </p>
+              <hr className="my-4 border-gray-300" />
 
-                            {/* Separator */}
-                            <hr className="my-4 border-gray-300" />
+              <p className="text-lg font-semibold text-black uppercase">Contact</p>
+              <p className="text-black mt-2">
+                <strong>Posted by:</strong> {posterName}
+              </p>
+              <div className="mt-2 text-black">
+                <p>
+                  <strong>Move-in Date:</strong>{" "}
+                  {selectedListing.moveInDate.toDate().toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+                <p className="mt-2">
+                  <strong>Move-out Date:</strong>{" "}
+                  {selectedListing.moveOutDate.toDate().toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
 
-                            {/* Contact */}
-                            <p className="text-lg font-semibold text-gray-500 uppercase">Contact</p>
-                            <p className="text-gray-800 mt-2">
-                                <strong>Posted by:</strong> {posterName}
-                            </p>
-
-                            {/* Move-in/out Dates */}
-                            <div className="bg-gray-100 p-4 rounded-lg mt-2">
-                                <p>
-                                    <strong>Move-in Date:</strong>{" "}
-                                    {selectedListing.moveInDate
-                                        .toDate()
-                                        .toLocaleDateString("en-US", {
-                                            month: "long",
-                                            year: "numeric",
-                                        })}
-                                </p>
-                                <p className="mt-2">
-                                    <strong>Move-out Date:</strong>{" "}
-                                    {selectedListing.moveOutDate
-                                        .toDate()
-                                        .toLocaleDateString("en-US", {
-                                            month: "long",
-                                            year: "numeric",
-                                        })}
-                                </p>
-                            </div>
-
-                            {/* Get Email Button */}
-                            <button
-                                onClick={() => alert(`Email: ${posterEmail}`)}
-                                className="w-full bg-blue-500 text-white py-2 rounded-lg mt-4"
-                            >
-                                Get Email
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Bottom Sheet Modal (Filters) */}
-                {showFilters && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-end z-50">
-                        <div className="bg-white w-full max-w-md rounded-t-2xl p-6 relative">
-                            {/* Cancel Button (top-right) */}
-                            <button
-                                onClick={handleCancel}
-                                className="absolute top-4 right-4 text-gray-700 text-xl"
-                            >
-                                &times;
-                            </button>
-
-                            <h2 className="text-xl font-semibold mb-4">Filter Options</h2>
-
-                            {/* Price Slider */}
-                            <label className="block text-sm text-gray-600 mb-1">
-                                Max Price: <strong>${filterPrice}</strong>
-                            </label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="5000"
-                                step="100"
-                                value={filterPrice}
-                                onChange={(e) => setFilterPrice(Number(e.target.value))}
-                                className="w-full accent-purple-500 mb-6"
-                            />
-
-                            {/* Beds */}
-                            <label className="block text-sm text-gray-600 mb-1">
-                                Beds: <strong>{filterBeds}</strong>
-                            </label>
-                            <select
-                                className="w-full mb-4 border border-gray-300 rounded-md p-2 focus:outline-none"
-                                value={filterBeds}
-                                onChange={(e) => setFilterBeds(e.target.value)}
-                            >
-                                <option value="any">Any</option>
-                                <option value="studio">Studio</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4+">4+</option>
-                            </select>
-
-                            {/* Baths */}
-                            <label className="block text-sm text-gray-600 mb-1">
-                                Baths: <strong>{filterBaths}</strong>
-                            </label>
-                            <select
-                                className="w-full mb-6 border border-gray-300 rounded-md p-2 focus:outline-none"
-                                value={filterBaths}
-                                onChange={(e) => setFilterBaths(e.target.value)}
-                            >
-                                <option value="any">Any</option>
-                                <option value="1">1</option>
-                                <option value="1.5">1.5</option>
-                                <option value="2">2</option>
-                                <option value="2.5">2.5</option>
-                                <option value="3">3</option>
-                                <option value="3.5">3.5</option>
-                                <option value="4+">4+</option>
-                            </select>
-
-                            {/* Buttons Row */}
-                            <div className="flex justify-end space-x-2">
-                                <Button variant="outline" onClick={handleClear}>
-                                    Clear
-                                </Button>
-                                <Button variant="outline" onClick={handleCancel}>
-                                    Cancel
-                                </Button>
-                                <Button variant="default" onClick={handleApply}>
-                                    Apply
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+              <button
+                onClick={() => alert(`Email: ${posterEmail}`)}
+                className="w-full bg-blue-500 text-white py-2 rounded-lg mt-6"
+              >
+                Get Email
+              </button>
             </div>
-        </section>
-    );
+          </div>
+        )}
+
+        {showFilterModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            onClick={() => setShowFilterModal(false)}
+          >
+            <div className="absolute inset-0 bg-black bg-opacity-30" />
+            <div
+              className="relative w-11/12 max-w-md bg-white rounded-md shadow-lg p-8 pt-10 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowFilterModal(false)}
+                className="absolute top-3 right-3 text-black text-3xl font-bold hover:scale-110 transition"
+              >
+                &times;
+              </button>
+
+              <h2 className="text-black text-2xl font-bold text-center mb-6">
+                Filter Options
+              </h2>
+
+              <label className="block text-sm text-black mb-1">
+                Max Price: <strong>${filterPrice}</strong>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="5000"
+                step="100"
+                value={filterPrice}
+                onChange={(e) => setFilterPrice(Number(e.target.value))}
+                className="w-full accent-purple-500 mb-6"
+              />
+
+              <label className="block text-sm text-black mb-1">
+                Beds: <strong>{filterBeds}</strong>
+              </label>
+              <select
+                className="w-full mb-4 border border-gray-300 rounded-md p-2 focus:outline-none text-black"
+                value={filterBeds}
+                onChange={(e) => setFilterBeds(e.target.value)}
+              >
+                <option value="any">Any</option>
+                <option value="studio">Studio</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4+">4+</option>
+              </select>
+
+              <label className="block text-sm text-black mb-1">
+                Baths: <strong>{filterBaths}</strong>
+              </label>
+              <select
+                className="w-full mb-6 border border-gray-300 rounded-md p-2 focus:outline-none text-black"
+                value={filterBaths}
+                onChange={(e) => setFilterBaths(e.target.value)}
+              >
+                <option value="any">Any</option>
+                <option value="1">1</option>
+                <option value="1.5">1.5</option>
+                <option value="2">2</option>
+                <option value="2.5">2.5</option>
+                <option value="3">3</option>
+                <option value="3.5">3.5</option>
+                <option value="4+">4+</option>
+              </select>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1 rounded-full bg-white border border-black text-black font-bold hover:bg-gray-100 transition"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setShowFilterModal(false)}
+                  className="px-3 py-1 rounded-full bg-white border border-black text-black font-bold hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyFilters}
+                  className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold hover:scale-105 transition"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }

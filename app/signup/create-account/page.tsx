@@ -60,7 +60,7 @@ export default function AccountInfoPage() {
 
       await sendEmailVerification(user);
 
-      // FIX: Save the name under the field "displayName" (capital N) to match login expectations.
+      // Save EXACTLY "displayName" to match the login page expectation
       await setDoc(
         doc(db, "users", user.uid),
         {

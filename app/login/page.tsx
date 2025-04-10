@@ -13,19 +13,27 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+
+  // Just track whether we are done checking the currentUser
+  const [checking, setChecking] = useState(true);
+
+  // Email/pass
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // For error messages
   const [errorMessage, setErrorMessage] = useState("");
 
+  // We'll only skip the login form if user is truly logged in AND we have localStorage set
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        router.push("/events");
-      } else {
-        setLoading(false);
+        // If the user is already logged in, we can do a quick check to see if localStorage is set
+        // But the simpler approach is: do nothing, let the user see the login page, or sign out.
+        // They can also navigate away. For clarity, we'll just stop loading.
       }
+      setChecking(false);
     });
     return () => unsubscribe();
   }, [router]);
@@ -35,6 +43,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
 
+      // Now fetch the user doc from Firestore
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("email", "==", email));
       const snapshot = await getDocs(q);
@@ -45,21 +54,26 @@ export default function LoginPage() {
         return;
       }
 
+      // We'll take the first doc
       const docSnap = snapshot.docs[0];
       const userData = docSnap.data();
-      // Use "displayName" (capital N) as stored in Firestore
+
+      // We expect userData.displayName to exist
       const rawDisplayName = userData.displayName || "User";
       const firstName = rawDisplayName.split(" ")[0] || "User";
+
       localStorage.setItem("displayName", firstName);
 
       router.push("/events");
-    } catch (error) {
-      console.error("[handleLogin] Error:", error);
+    } catch (err) {
+      console.error("[handleLogin] Error:", err);
       setErrorMessage("Wrong credentials. Please try again.");
     }
   };
 
-  if (loading) return <p className="text-center mt-10 text-black">Loading...</p>;
+  if (checking) {
+    return <p className="text-center mt-10 text-black">Loading...</p>;
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
@@ -74,7 +88,9 @@ export default function LoginPage() {
           Login.
         </h1>
         {errorMessage && (
-          <p className="text-red-500 text-sm mb-4 text-center">{errorMessage}</p>
+          <p className="text-red-500 text-sm mb-4 text-center">
+            {errorMessage}
+          </p>
         )}
         <div className="mb-4">
           <label className="block text-black text-sm font-semibold mb-1">
@@ -104,7 +120,11 @@ export default function LoginPage() {
             className="absolute right-3 bottom-3 text-gray-500"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOffIcon size={18} style={{ color: "black" }} /> : <EyeIcon size={18} style={{ color: "black" }} />}
+            {showPassword ? (
+              <EyeOffIcon size={18} style={{ color: "black" }} />
+            ) : (
+              <EyeIcon size={18} style={{ color: "black" }} />
+            )}
           </button>
         </div>
         <div className="mb-6 text-right">

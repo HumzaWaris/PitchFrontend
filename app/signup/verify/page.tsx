@@ -19,22 +19,27 @@ export default function VerifyEmailPage() {
     const checkVerification = setInterval(async () => {
       if (!auth.currentUser) return;
       await auth.currentUser.reload();
+
+      // If user is verified, proceed to the next signup step: /signup/choices
       if (auth.currentUser?.emailVerified) {
         clearInterval(checkVerification);
         router.push("/signup/choices");
       }
     }, 5000);
+
     return () => clearInterval(checkVerification);
   }, [router]);
 
   const handleVerifiedClick = async () => {
     setError("");
     setResendMsg("");
+
     if (!auth.currentUser) {
       setError("No user found. Please sign up again.");
       return;
     }
     await auth.currentUser.reload();
+
     if (auth.currentUser?.emailVerified) {
       router.push("/signup/choices");
     } else {
@@ -51,6 +56,7 @@ export default function VerifyEmailPage() {
   const handleResend = async () => {
     setError("");
     setResendMsg("");
+
     if (!auth.currentUser) {
       setError("No user found. Please sign up again.");
       return;
@@ -80,14 +86,10 @@ export default function VerifyEmailPage() {
           <span className="font-semibold">{userEmail}</span>
         </p>
         {error && (
-          <p className="text-red-500 text-sm mb-4">
-            {error}
-          </p>
+          <p className="text-red-500 text-sm mb-4">{error}</p>
         )}
         {resendMsg && (
-          <p className="text-green-600 text-sm mb-4">
-            {resendMsg}
-          </p>
+          <p className="text-green-600 text-sm mb-4">{resendMsg}</p>
         )}
         <div className="space-y-3">
           <button
