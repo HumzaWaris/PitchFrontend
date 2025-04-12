@@ -59,10 +59,10 @@ export default function LoginPage() {
       const userData = docSnap.data();
 
       // We expect userData.displayName to exist
-      const rawDisplayName = userData.displayName || "User";
+      const rawDisplayName = userData.displayname || "User";
       const firstName = rawDisplayName.split(" ")[0] || "User";
 
-      localStorage.setItem("displayName", firstName);
+      localStorage.setItem("displayname", firstName);
 
       router.push("/events");
     } catch (err) {

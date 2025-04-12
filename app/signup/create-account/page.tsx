@@ -64,7 +64,7 @@ export default function AccountInfoPage() {
       await setDoc(
         doc(db, "users", user.uid),
         {
-          displayName: name,
+          displayname: name,
           email,
           college: university,
           memberSince: `${new Date().getFullYear()}`,

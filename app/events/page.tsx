@@ -209,7 +209,7 @@ export default function Events() {
   const [infiniteTarget, setInfiniteTarget] = useState(null);
 
   useEffect(() => {
-    const n = localStorage.getItem("displayName");
+    const n = localStorage.getItem("displayname");
     if (n) setDisplayName(n);
   }, []);
 
@@ -266,7 +266,7 @@ export default function Events() {
 
   const logout = async () => {
     await signOut(auth);
-    localStorage.removeItem("displayName");
+    localStorage.removeItem("displayname");
     router.push("/");
   };
 

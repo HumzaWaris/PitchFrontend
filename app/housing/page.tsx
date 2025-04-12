@@ -83,7 +83,7 @@ export default function Housing() {
   const [filterBaths, setFilterBaths] = useState("any");
 
   useEffect(() => {
-    const n = localStorage.getItem("displayName");
+    const n = localStorage.getItem("displayname");
     if (n) setDisplayName(n);
   }, []);
 
@@ -148,7 +148,7 @@ export default function Housing() {
 
   const logout = async () => {
     await signOut(auth);
-    localStorage.removeItem("displayName");
+    localStorage.removeItem("displayname");
     router.push("/");
   };
 
