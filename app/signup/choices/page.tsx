@@ -70,7 +70,6 @@ export default function CreateAccount() {
       setError("No user found. Please sign in again.");
       return;
     }
-
     try {
       await setDoc(
         doc(db, "users", user.uid),

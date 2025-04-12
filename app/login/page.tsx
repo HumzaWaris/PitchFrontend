@@ -128,12 +128,6 @@ export default function LoginPage() {
           </button>
         </div>
         <div className="mb-6 text-right">
-          <button
-            onClick={() => alert("Forgot Password flow not implemented yet.")}
-            className="text-sm text-gray-600 hover:underline"
-          >
-            Forgot Password?
-          </button>
         </div>
         <button
           onClick={handleLogin}
