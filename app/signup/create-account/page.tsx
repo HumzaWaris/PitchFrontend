@@ -11,12 +11,11 @@ export default function AccountInfoPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const defaultCollege = searchParams.get("college") || "Purdue University";
-  const defaultEmail = searchParams.get("email") || "";
+  const university = searchParams.get("college") || "Purdue University";
+  const email = searchParams.get("email") || "";
+  const defaultName = searchParams.get("name") || "";
 
-  const [university, setUniversity] = useState(defaultCollege);
-  const [email, setEmail] = useState(defaultEmail);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -60,7 +59,6 @@ export default function AccountInfoPage() {
 
       await sendEmailVerification(user);
 
-      // Save EXACTLY "displayName" to match the login page expectation
       await setDoc(
         doc(db, "users", user.uid),
         {
@@ -87,7 +85,7 @@ export default function AccountInfoPage() {
           &larr; Back
         </button>
         <h2 className="text-2xl font-bold mb-4 text-center text-black">
-          Account Information.
+          Account Information
         </h2>
         {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
         <form onSubmit={handleSignup} className="space-y-4">
@@ -103,6 +101,7 @@ export default function AccountInfoPage() {
             className="w-full p-3 border rounded text-black"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            readOnly={!!defaultName}        // locked if we found it
             required
           />
           <input
@@ -110,9 +109,10 @@ export default function AccountInfoPage() {
             placeholder="Email"
             className="w-full p-3 border rounded text-black"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            readOnly                                      // always locked
           />
+
+          {/* Password */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -137,17 +137,15 @@ export default function AccountInfoPage() {
               )}
             </button>
           </div>
+
+          {/* Password criteria */}
           <div className="text-xs text-black font-bold">
-            <p className={passwordValid.length ? "text-green-500" : "text-red-500"}>
-              ✓ 8 Characters
-            </p>
-            <p className={passwordValid.specialChar ? "text-green-500" : "text-red-500"}>
-              ✓ Special Character
-            </p>
-            <p className={passwordValid.digit ? "text-green-500" : "text-red-500"}>
-              ✓ Digit
-            </p>
+            <p className={passwordValid.length ? "text-green-500" : "text-red-500"}>✓ 8 Characters</p>
+            <p className={passwordValid.specialChar ? "text-green-500" : "text-red-500"}>✓ Special Character</p>
+            <p className={passwordValid.digit ? "text-green-500" : "text-red-500"}>✓ Digit</p>
           </div>
+
+          {/* Confirm */}
           <div className="relative">
             <input
               type={showConfirmPassword ? "text" : "password"}
@@ -169,18 +167,20 @@ export default function AccountInfoPage() {
               )}
             </button>
           </div>
+
           <button
             type="submit"
-            className="w-full p-3 text-white bg-purple-500 rounded-md hover:bg-purple-600"
+            className="w-full p-3 text-white bg-purple-500 rounded-md hover:bg-purple-600 disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? "Creating Account..." : "Verify and Create Account"}
+            {loading ? "Creating Account…" : "Verify and Create Account"}
           </button>
         </form>
+
         {loading && (
           <div className="mt-4 p-3 text-center bg-red-100 text-red-500 rounded-md">
-            <p>Retrieving User Info</p>
-            <p className="text-sm">Hang on a second. We are retrieving your information.</p>
+            <p>Creating Account</p>
+            <p className="text-sm">Hang on a second. We are saving your information.</p>
           </div>
         )}
       </div>

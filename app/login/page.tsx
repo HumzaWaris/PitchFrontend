@@ -135,6 +135,12 @@ export default function LoginPage() {
         >
           Login
         </button>
+        <p className="mt-4 text-center text-black">
+          New User?{" "}
+          <button onClick={() => router.push("/signup/college")} className="text-purple-500 font-bold hover:underline">
+            Click here to Sign Up
+          </button>
+        </p>
       </div>
     </div>
   );

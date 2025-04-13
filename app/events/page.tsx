@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { db, auth } from "@/lib/firebaseConfig";
-import { signOut } from "firebase/auth";
 import { collection, onSnapshot, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -208,17 +208,58 @@ export default function Events() {
   const [visibleDays, setVisibleDays] = useState(3);
   const [infiniteTarget, setInfiniteTarget] = useState(null);
 
+  // useEffect(() => {
+  //   const n = localStorage.getItem("displayname");
+  //   if (n) setDisplayName(n);
+  // }, []);
+
+  // useEffect(() => {
+  //   const q = query(collection(db, "Purdue University"), orderBy("eventDate", "asc"));
+  //   const unsub = onSnapshot(q, (s) => {
+  //     const ev = s.docs.map((d) => {
+  //       const data = d.data();
+  //       const dt = data.eventDate?.toDate ? data.eventDate.toDate() : new Date(data.eventDate);
+  //       return { id: d.id, ...data, eventDate: dt };
+  //     });
+  //     setEventsData(ev);
+  //   });
+  //   return () => unsub();
+  // }, []);
   useEffect(() => {
     const n = localStorage.getItem("displayname");
     if (n) setDisplayName(n);
   }, []);
 
+  /* 3️⃣  —  fall back to Firebase if localStorage was empty */
   useEffect(() => {
-    const q = query(collection(db, "Purdue University"), orderBy("eventDate", "asc"));
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        const n =
+          snap.data().displayname || user.displayName || "User";
+
+        setDisplayName(n);
+        localStorage.setItem("displayname", n);   // write it for next time
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  /* 4️⃣  —  realtime events feed (unchanged) */
+  useEffect(() => {
+    const q = query(
+      collection(db, "Purdue University"),
+      orderBy("eventDate", "asc")
+    );
     const unsub = onSnapshot(q, (s) => {
       const ev = s.docs.map((d) => {
         const data = d.data();
-        const dt = data.eventDate?.toDate ? data.eventDate.toDate() : new Date(data.eventDate);
+        const dt =
+          data.eventDate?.toDate
+            ? data.eventDate.toDate()
+            : new Date(data.eventDate);
         return { id: d.id, ...data, eventDate: dt };
       });
       setEventsData(ev);
