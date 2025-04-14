@@ -433,6 +433,10 @@ export default function Housing() {
   const meetsGenderFilter = (listing: Listing) => {
     if (selectedGender === "any") return true;
     if (!listing.gender) return false;
+    // Handle both "Co-ed" and "Coed" variations
+    if (selectedGender === "Co-ed") {
+      return listing.gender === "Co-ed" || listing.gender === "Coed";
+    }
     return listing.gender === selectedGender;
   };
 
@@ -460,8 +464,9 @@ export default function Housing() {
     setShowFilterModal(false);
   };
 
-  // Update clearFilters to reset distance
+  // Update clearFilters to properly reset all listings
   const clearFilters = () => {
+    // Reset all filter states
     setFilterPrice(0);
     setFilterBeds("any");
     setFilterBaths("any");
@@ -473,7 +478,21 @@ export default function Housing() {
     setSelectedAmenities([]);
     setSelectedGender("any");
     setMaxMilesRange(100);
-    setFilteredListings(computedListings);
+
+    // Reset to all listings from computedListings
+    const allListings = computedListings.map(listing => ({
+      ...listing,
+      computedDistance: userLocation && listing.latitude && listing.longitude
+        ? haversineDistance(
+            userLocation.lat,
+            userLocation.lng,
+            Number(listing.latitude),
+            Number(listing.longitude)
+          )
+        : listing.distance || 0
+    }));
+
+    setFilteredListings(allListings);
     setShowFilterModal(false);
   };
 
@@ -845,7 +864,7 @@ export default function Housing() {
                       Gender
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {["any", "Male", "Female", "Co-ed"].map((gender) => (
+                      {["any", "Male", "Female", "Coed"].map((gender) => (
                         <div 
                           key={gender} 
                           className={`flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer ${
@@ -861,7 +880,8 @@ export default function Housing() {
                                 (filterPrice === 0 || l.myPrice <= filterPrice) &&
                                 meetsDateRange(l.moveInDate) &&
                                 meetsAmenitiesFilter(l) &&
-                                (gender === "any" || l.gender === gender)
+                                (gender === "any" || 
+                                 (gender === "Coed" ? (l.gender === "Coed" || l.gender === "Co-ed") : l.gender === gender))
                             );
                             const sortedRes = sortListings(res);
                             setFilteredListings(sortedRes);
