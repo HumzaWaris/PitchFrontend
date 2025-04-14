@@ -505,20 +505,20 @@ export default function Housing() {
   return (
     <section id="housing" className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md rounded-lg">
-        <div className="flex space-x-6">
+        <div className="flex items-center space-x-5">
           <Link href="/">
             <Image
                 src="/images/Huddle_Social_White_Background.png"
                 alt="Huddle Social Logo"
-                width={40}
-                height={40}
+                width={50}
+                height={50}
                 className="rounded-full object-cover"
             />
           </Link>
-          <Link href="/events" className="font-semibold text-black flex items-center hover:scale-105 transition">
+          <Link href="/events" className="text-black font-semibold flex items-center hover:scale-105 transition">
             <span className="mr-1">📅</span>Events
           </Link>
-          <Link href="/housing" className="font-semibold text-black flex items-center hover:scale-105 transition">
+          <Link href="/housing" className="text-black font-semibold flex items-center hover:scale-105 transition">
             <span className="mr-1">🏠</span>Housing
           </Link>
         </div>
