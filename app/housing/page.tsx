@@ -524,450 +524,460 @@ export default function Housing() {
       </nav>
 
       <div className="py-12 container mx-auto px-6 lg:px-12">
-        {/* Location Permission Banner */}
-        {isLoggedIn && locationPermissionStatus === 'pending' && (
-          <div className="mb-6 bg-blue-50 p-4 rounded-lg flex items-center justify-between">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <p className="text-blue-700">
-                Allow location access to see accurate distances to listings
-              </p>
-            </div>
-            <button
-              onClick={requestLocation}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-            >
-              Enable Location
-            </button>
-          </div>
-        )}
-
-        {/* Location Denied Banner */}
-        {isLoggedIn && locationPermissionStatus === 'denied' && (
-          <div className="mb-6 bg-yellow-50 p-4 rounded-lg flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <p className="text-yellow-700">
-              Using approximate distances. Enable location in your browser settings for accurate distances.
-            </p>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="flex flex-col space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-black">
-              Housing ({filteredListings.length} listings)
-            </h1>
-            <button
+        {!isLoggedIn ? (
+          <div className="text-center text-red-600 font-semibold">Please login to get access to the information.</div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-4xl font-bold text-black">Housing</h3>
+              <div className="flex space-x-3">
+                <button
                   onClick={() => setShowFilterModal(true)}
                   className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
                 >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1
-                    1 0 011 1v2a1 1 0 01-.293.707l-5.414
-                    5.414A1 1 0 0014 12.414V19l-4
-                    2v-8.586a1 1 0 00-.293-.707L4.293
-                    6.707A1 1 0 014 6V4z"
-                />
-              </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-5.414 5.414A1 1 0 0014 12.414V19l-4 2v-8.586a1 1 0 00-.293-.707L4.293 6.707A1 1 0 014 6V4z"
+                    />
+                  </svg>
                   All Filters
                 </button>
-          </div>
+              </div>
+            </div>
 
-          {/* Listings Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredListings.map((l) => {
-              const urls = imageURLs[l.id] || [];
-              return (
-                  <div
-                      key={l.id}
-                      onClick={() => setSelectedListing(l)}
-                      className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
-                  >
-                    <div className="relative" onClick={(e) => e.stopPropagation()}>
-                      <ImageCarousel images={urls} />
-                      {l.sublettingTrue && (
-                          <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm z-10">
-                        Sublet
-                      </span>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h2 className="text-lg font-bold text-black">{l.myHousingName}</h2>
-                      <p className="text-sm text-gray-600">{l.placeName}</p>
-                      <p className="text-sm text-gray-800 mt-2">
-                        {l.bedsCount} bed{l.bedsCount > 1 ? "s" : ""}, {l.bathsCount} bath{l.bathsCount > 1 ? "s" : ""} | ${l.myPrice} per person
-                      </p>
-
-                      {/* Display estimated distance (from computedDistance) above move-in info */}
-                      <div className="flex justify-between items-center mt-2">
-                        <div className="flex flex-col">
-                          <p className="text-green-600 text-sm">
-                            Est. {Number(l.computedDistance).toFixed(1)} miles
-                          </p>
-                          <p className="text-green-600 text-sm">
-                            {l.moveInDate
-                                ? l.moveInDate
-                                    .toDate()
-                                    .toLocaleDateString("en-US", { month: "long", year: "numeric" })
-                                : "No move-in date"}
-                          </p>
-                        </div>
-                        <span
-                            className={`text-sm font-semibold px-3 py-1 rounded-full text-white cursor-pointer ${
-                                l.gender === "Male"
-                                    ? "bg-blue-500 hover:bg-blue-600"
-                                    : l.gender === "Female"
-                                        ? "bg-pink-500 hover:bg-pink-600"
-                                        : "bg-purple-500 hover:bg-purple-600"
-                            }`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedGender(l.gender);
-                              setShowFilterModal(true);
-                            }}
-                        >
-                          {l.gender}
-                        </span>
-                      </div>
-                    </div>
+            {/* Location Permission Banner */}
+            {locationPermissionStatus === 'pending' && (
+              <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6 rounded">
+                <div className="flex items-center">
+                  <div className="py-1">
+                    <svg className="h-6 w-6 text-blue-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Filter Modal */}
-        {isLoggedIn && showFilterModal && (
-            <div
-                className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-                onClick={() => setShowFilterModal(false)}
-            >
-              <div className="absolute inset-0 bg-black bg-opacity-30" />
-              <div
-                  className="relative w-11/12 max-w-4xl bg-white rounded-lg shadow-lg p-8 max-h-[85vh] overflow-y-auto"
-                  onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                    onClick={() => setShowFilterModal(false)}
-                    className="absolute top-4 right-4 text-black text-3xl font-bold hover:scale-110 transition"
-                >
-                  &times;
-                </button>
-                <h2 className="text-black text-3xl font-bold text-center mb-6">Filter Options</h2>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Left Column */}
-                  <div className="space-y-6">
-                    {/* Sort By Section */}
-                    <div>
-                      <label className="block text-base font-semibold text-black mb-2">
-                        Sort By
-                      </label>
-                      <select
-                        className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                        value={sortOption}
-                        onChange={(e) => setSortOption(e.target.value)}
-                      >
-                        <option value="">Select sorting option</option>
-                        <option value="distance-asc">Distance (Ascending)</option>
-                        <option value="distance-desc">Distance (Descending)</option>
-                        <option value="price-asc">Price (Ascending)</option>
-                        <option value="price-desc">Price (Descending)</option>
-                      </select>
-                    </div>
-
-                    {/* Price Section */}
-                    <div>
-                      <label className="block text-base font-semibold text-black mb-2">
-                        Max Price: <strong>${filterPrice === 0 ? "No limit" : filterPrice}</strong>
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="5000"
-                        step="100"
-                        value={filterPrice}
-                        onChange={(e) => setFilterPrice(Number(e.target.value))}
-                        className="w-full h-2 accent-purple-500"
-                      />
-                    </div>
-
-                    {/* Beds & Baths Section */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-base font-semibold text-black mb-2">
-                          Beds
-                        </label>
-                        <select
-                          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                          value={filterBeds}
-                          onChange={(e) => setFilterBeds(e.target.value)}
-                        >
-                          <option value="any">Any</option>
-                          <option value="studio">Studio</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4+">4+</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-base font-semibold text-black mb-2">
-                          Baths
-                        </label>
-                        <select
-                          className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                          value={filterBaths}
-                          onChange={(e) => setFilterBaths(e.target.value)}
-                        >
-                          <option value="any">Any</option>
-                          <option value="1">1</option>
-                          <option value="1.5">1.5</option>
-                          <option value="2">2</option>
-                          <option value="2.5">2.5</option>
-                          <option value="3">3</option>
-                          <option value="3.5">3.5</option>
-                          <option value="4+">4+</option>
-                        </select>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="font-bold">Location Access Required</p>
+                    <p className="text-sm">Please enable location services to see housing options near you.</p>
                   </div>
-
-                  {/* Right Column */}
-                  <div className="space-y-6">
-                    {/* Move-in Date Range Section */}
-                    <div>
-                      <label className="block text-base font-semibold text-black mb-2">
-                        Move-In Date Range
-                      </label>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-2">Start Date</label>
-                          <div className="flex gap-3">
-                            <select
-                              className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                              value={moveInStartMonth}
-                              onChange={(e) => setMoveInStartMonth(e.target.value)}
-                            >
-                              <option value="">Month</option>
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const month = (i + 1).toString().padStart(2, '0');
-                                const date = new Date(2024, i, 1);
-                                return (
-                                  <option key={month} value={month}>
-                                    {date.toLocaleString('default', { month: 'long' })}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                            <select
-                              className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                              value={moveInStartYear}
-                              onChange={(e) => setMoveInStartYear(e.target.value)}
-                            >
-                              <option value="">Year</option>
-                              {Array.from({ length: 3 }, (_, i) => {
-                                const year = new Date().getFullYear() + i;
-                                return (
-                                  <option key={year} value={year}>{year}</option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-2">End Date</label>
-                          <div className="flex gap-3">
-                            <select
-                              className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                              value={moveInEndMonth}
-                              onChange={(e) => setMoveInEndMonth(e.target.value)}
-                            >
-                              <option value="">Month</option>
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const month = (i + 1).toString().padStart(2, '0');
-                                const date = new Date(2024, i, 1);
-                                return (
-                                  <option key={month} value={month}>
-                                    {date.toLocaleString('default', { month: 'long' })}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                            <select
-                              className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
-                              value={moveInEndYear}
-                              onChange={(e) => setMoveInEndYear(e.target.value)}
-                            >
-                              <option value="">Year</option>
-                              {Array.from({ length: 3 }, (_, i) => {
-                                const year = new Date().getFullYear() + i;
-                                return (
-                                  <option key={year} value={year}>{year}</option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Gender Section */}
-                    <div>
-                      <label className="block text-base font-semibold text-black mb-2">
-                        Gender
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["any", "Male", "Female", "Co-ed"].map((gender) => (
-                          <div 
-                            key={gender} 
-                            className={`flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer ${
-                              selectedGender === gender ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                            }`}
-                            onClick={() => {
-                              setSelectedGender(gender);
-                              // Apply filters immediately when selecting gender
-                              const res = computedListings.filter(
-                                (l) =>
-                                  meetsBeds(l.bedsCount, filterBeds) &&
-                                  meetsBaths(l.bathsCount, filterBaths) &&
-                                  (filterPrice === 0 || l.myPrice <= filterPrice) &&
-                                  meetsDateRange(l.moveInDate) &&
-                                  meetsAmenitiesFilter(l) &&
-                                  (gender === "any" || l.gender === gender)
-                              );
-                              const sortedRes = sortListings(res);
-                              setFilteredListings(sortedRes);
-                            }}
-                          >
-                            <input
-                              type="radio"
-                              id={`gender-${gender}`}
-                              name="gender"
-                              value={gender}
-                              checked={selectedGender === gender}
-                              onChange={() => {}}
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                            />
-                            <label 
-                              htmlFor={`gender-${gender}`} 
-                              className="ml-2 text-base text-gray-700 cursor-pointer select-none flex-grow"
-                            >
-                              {gender === "any" ? "Any" : gender}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Amenities Section */}
-                    <div>
-                      <label className="block text-base font-semibold text-black mb-2">
-                        Amenities
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {amenitiesList.map((amenity) => (
-                          <div key={amenity} className="flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100">
-                            <input
-                              type="checkbox"
-                              id={amenity}
-                              checked={selectedAmenities.includes(amenity)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedAmenities([...selectedAmenities, amenity]);
-                                } else {
-                                  setSelectedAmenities(selectedAmenities.filter(a => a !== amenity));
-                                }
-                              }}
-                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <label htmlFor={amenity} className="ml-2 text-base text-gray-700 cursor-pointer select-none">
-                              {amenity}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Add Distance Range Section at the bottom */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <label className="block text-base font-semibold text-black mb-2">
-                    Maximum Distance: <strong>{maxMilesRange.toFixed(1)} ± 0.2 miles</strong>
-                  </label>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="100"
-                    step="0.5"
-                    value={maxMilesRange}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setMaxMilesRange(value);
-                      // Optionally apply filters immediately
-                      const res = computedListings.filter(
-                        (l) =>
-                          meetsBeds(l.bedsCount, filterBeds) &&
-                          meetsBaths(l.bathsCount, filterBaths) &&
-                          (filterPrice === 0 || l.myPrice <= filterPrice) &&
-                          meetsDateRange(l.moveInDate) &&
-                          meetsAmenitiesFilter(l) &&
-                          meetsGenderFilter(l) &&
-                          ((l.computedDistance || l.distance || 0) <= value)
-                      );
-                      const sortedRes = sortListings(res);
-                      setFilteredListings(sortedRes);
-                    }}
-                    className="w-full h-2 accent-purple-500"
-                  />
-                  <div className="flex justify-between text-sm text-gray-500 mt-1">
-                    <span>0.5 mi</span>
-                    <span>50 mi</span>
-                    <span>100 mi</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
                   <button
-                      onClick={clearFilters}
-                      className="px-6 py-2 rounded-lg bg-white border-2 border-black text-black font-bold hover:bg-gray-100 transition"
+                    onClick={requestLocation}
+                    className="ml-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
                   >
-                    Clear
-                  </button>
-                  <button
-                      onClick={() => setShowFilterModal(false)}
-                      className="px-6 py-2 rounded-lg bg-white border-2 border-black text-black font-bold hover:bg-gray-100 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                      onClick={applyFilters}
-                      className="px-6 py-2 rounded-lg bg-gray-900 text-white font-bold hover:bg-gray-800 transition"
-                  >
-                    Apply
+                    Enable Location
                   </button>
                 </div>
               </div>
+            )}
+
+            {/* Location Denied Banner */}
+            {isLoggedIn && locationPermissionStatus === 'denied' && (
+              <div className="mb-6 bg-yellow-50 p-4 rounded-lg flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <p className="text-yellow-700">
+                  Using approximate distances. Enable location in your browser settings for accurate distances.
+                </p>
+              </div>
+            )}
+
+            {/* Main Content */}
+            <div className="flex flex-col space-y-6">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-black">
+                  Housing ({filteredListings.length} listings)
+                </h1>
+              </div>
+
+              {/* Listings Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredListings.map((l) => {
+                  const urls = imageURLs[l.id] || [];
+                  return (
+                      <div
+                          key={l.id}
+                          onClick={() => setSelectedListing(l)}
+                          className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+                      >
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <ImageCarousel images={urls} />
+                          {l.sublettingTrue && (
+                              <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm z-10">
+                            Sublet
+                          </span>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h2 className="text-lg font-bold text-black">{l.myHousingName}</h2>
+                          <p className="text-sm text-gray-600">{l.placeName}</p>
+                          <p className="text-sm text-gray-800 mt-2">
+                            {l.bedsCount} bed{l.bedsCount > 1 ? "s" : ""}, {l.bathsCount} bath{l.bathsCount > 1 ? "s" : ""} | ${l.myPrice} per person
+                          </p>
+
+                          {/* Display estimated distance (from computedDistance) above move-in info */}
+                          <div className="flex justify-between items-center mt-2">
+                            <div className="flex flex-col">
+                              <p className="text-green-600 text-sm">
+                                Est. {Number(l.computedDistance).toFixed(1)} miles
+                              </p>
+                              <p className="text-green-600 text-sm">
+                                {l.moveInDate
+                                    ? l.moveInDate
+                                        .toDate()
+                                        .toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                                    : "No move-in date"}
+                              </p>
+                            </div>
+                            <span
+                                className={`text-sm font-semibold px-3 py-1 rounded-full text-white cursor-pointer ${
+                                    l.gender === "Male"
+                                        ? "bg-blue-500 hover:bg-blue-600"
+                                        : l.gender === "Female"
+                                            ? "bg-pink-500 hover:bg-pink-600"
+                                            : "bg-purple-500 hover:bg-purple-600"
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedGender(l.gender);
+                                  setShowFilterModal(true);
+                                }}
+                            >
+                              {l.gender}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                  );
+                })}
+              </div>
             </div>
+          </>
         )}
       </div>
+
+      {/* Filter Modal */}
+      {isLoggedIn && showFilterModal && (
+          <div
+              className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+              onClick={() => setShowFilterModal(false)}
+          >
+            <div className="absolute inset-0 bg-black bg-opacity-30" />
+            <div
+                className="relative w-11/12 max-w-4xl bg-white rounded-lg shadow-lg p-8 max-h-[85vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                  onClick={() => setShowFilterModal(false)}
+                  className="absolute top-4 right-4 text-black text-3xl font-bold hover:scale-110 transition"
+              >
+                &times;
+              </button>
+              <h2 className="text-black text-3xl font-bold text-center mb-6">Filter Options</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Sort By Section */}
+                  <div>
+                    <label className="block text-base font-semibold text-black mb-2">
+                      Sort By
+                    </label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                      value={sortOption}
+                      onChange={(e) => setSortOption(e.target.value)}
+                    >
+                      <option value="">Select sorting option</option>
+                      <option value="distance-asc">Distance (Ascending)</option>
+                      <option value="distance-desc">Distance (Descending)</option>
+                      <option value="price-asc">Price (Ascending)</option>
+                      <option value="price-desc">Price (Descending)</option>
+                    </select>
+                  </div>
+
+                  {/* Price Section */}
+                  <div>
+                    <label className="block text-base font-semibold text-black mb-2">
+                      Max Price: <strong>${filterPrice === 0 ? "No limit" : filterPrice}</strong>
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5000"
+                      step="100"
+                      value={filterPrice}
+                      onChange={(e) => setFilterPrice(Number(e.target.value))}
+                      className="w-full h-2 accent-purple-500"
+                    />
+                  </div>
+
+                  {/* Beds & Baths Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-base font-semibold text-black mb-2">
+                        Beds
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                        value={filterBeds}
+                        onChange={(e) => setFilterBeds(e.target.value)}
+                      >
+                        <option value="any">Any</option>
+                        <option value="studio">Studio</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4+">4+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-base font-semibold text-black mb-2">
+                        Baths
+                      </label>
+                      <select
+                        className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                        value={filterBaths}
+                        onChange={(e) => setFilterBaths(e.target.value)}
+                      >
+                        <option value="any">Any</option>
+                        <option value="1">1</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2">2</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3">3</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4+">4+</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Move-in Date Range Section */}
+                  <div>
+                    <label className="block text-base font-semibold text-black mb-2">
+                      Move-In Date Range
+                    </label>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Start Date</label>
+                        <div className="flex gap-3">
+                          <select
+                            className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                            value={moveInStartMonth}
+                            onChange={(e) => setMoveInStartMonth(e.target.value)}
+                          >
+                            <option value="">Month</option>
+                            {Array.from({ length: 12 }, (_, i) => {
+                              const month = (i + 1).toString().padStart(2, '0');
+                              const date = new Date(2024, i, 1);
+                              return (
+                                <option key={month} value={month}>
+                                  {date.toLocaleString('default', { month: 'long' })}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <select
+                            className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                            value={moveInStartYear}
+                            onChange={(e) => setMoveInStartYear(e.target.value)}
+                          >
+                            <option value="">Year</option>
+                            {Array.from({ length: 3 }, (_, i) => {
+                              const year = new Date().getFullYear() + i;
+                              return (
+                                <option key={year} value={year}>{year}</option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">End Date</label>
+                        <div className="flex gap-3">
+                          <select
+                            className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                            value={moveInEndMonth}
+                            onChange={(e) => setMoveInEndMonth(e.target.value)}
+                          >
+                            <option value="">Month</option>
+                            {Array.from({ length: 12 }, (_, i) => {
+                              const month = (i + 1).toString().padStart(2, '0');
+                              const date = new Date(2024, i, 1);
+                              return (
+                                <option key={month} value={month}>
+                                  {date.toLocaleString('default', { month: 'long' })}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <select
+                            className="flex-1 border border-gray-300 rounded-lg p-3 focus:outline-none text-black"
+                            value={moveInEndYear}
+                            onChange={(e) => setMoveInEndYear(e.target.value)}
+                          >
+                            <option value="">Year</option>
+                            {Array.from({ length: 3 }, (_, i) => {
+                              const year = new Date().getFullYear() + i;
+                              return (
+                                <option key={year} value={year}>{year}</option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gender Section */}
+                  <div>
+                    <label className="block text-base font-semibold text-black mb-2">
+                      Gender
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["any", "Male", "Female", "Co-ed"].map((gender) => (
+                        <div 
+                          key={gender} 
+                          className={`flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 cursor-pointer ${
+                            selectedGender === gender ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                          }`}
+                          onClick={() => {
+                            setSelectedGender(gender);
+                            // Apply filters immediately when selecting gender
+                            const res = computedListings.filter(
+                              (l) =>
+                                meetsBeds(l.bedsCount, filterBeds) &&
+                                meetsBaths(l.bathsCount, filterBaths) &&
+                                (filterPrice === 0 || l.myPrice <= filterPrice) &&
+                                meetsDateRange(l.moveInDate) &&
+                                meetsAmenitiesFilter(l) &&
+                                (gender === "any" || l.gender === gender)
+                            );
+                            const sortedRes = sortListings(res);
+                            setFilteredListings(sortedRes);
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            id={`gender-${gender}`}
+                            name="gender"
+                            value={gender}
+                            checked={selectedGender === gender}
+                            onChange={() => {}}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                          />
+                          <label 
+                            htmlFor={`gender-${gender}`} 
+                            className="ml-2 text-base text-gray-700 cursor-pointer select-none flex-grow"
+                          >
+                            {gender === "any" ? "Any" : gender}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Amenities Section */}
+                  <div>
+                    <label className="block text-base font-semibold text-black mb-2">
+                      Amenities
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {amenitiesList.map((amenity) => (
+                        <div key={amenity} className="flex items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100">
+                          <input
+                            type="checkbox"
+                            id={amenity}
+                            checked={selectedAmenities.includes(amenity)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAmenities([...selectedAmenities, amenity]);
+                              } else {
+                                setSelectedAmenities(selectedAmenities.filter(a => a !== amenity));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <label htmlFor={amenity} className="ml-2 text-base text-gray-700 cursor-pointer select-none">
+                            {amenity}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Add Distance Range Section at the bottom */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <label className="block text-base font-semibold text-black mb-2">
+                  Maximum Distance: <strong>{maxMilesRange.toFixed(1)} ± 0.2 miles</strong>
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="100"
+                  step="0.5"
+                  value={maxMilesRange}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setMaxMilesRange(value);
+                    // Optionally apply filters immediately
+                    const res = computedListings.filter(
+                      (l) =>
+                        meetsBeds(l.bedsCount, filterBeds) &&
+                        meetsBaths(l.bathsCount, filterBaths) &&
+                        (filterPrice === 0 || l.myPrice <= filterPrice) &&
+                        meetsDateRange(l.moveInDate) &&
+                        meetsAmenitiesFilter(l) &&
+                        meetsGenderFilter(l) &&
+                        ((l.computedDistance || l.distance || 0) <= value)
+                    );
+                    const sortedRes = sortListings(res);
+                    setFilteredListings(sortedRes);
+                  }}
+                  className="w-full h-2 accent-purple-500"
+                />
+                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                  <span>0.5 mi</span>
+                  <span>50 mi</span>
+                  <span>100 mi</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
+                <button
+                    onClick={clearFilters}
+                    className="px-6 py-2 rounded-lg bg-white border-2 border-black text-black font-bold hover:bg-gray-100 transition"
+                >
+                  Clear
+                </button>
+                <button
+                    onClick={() => setShowFilterModal(false)}
+                    className="px-6 py-2 rounded-lg bg-white border-2 border-black text-black font-bold hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                    onClick={applyFilters}
+                    className="px-6 py-2 rounded-lg bg-gray-900 text-white font-bold hover:bg-gray-800 transition"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+      )}
 
       {isLoggedIn && selectedListing && (
           <div

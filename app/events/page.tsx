@@ -178,6 +178,21 @@ function ModalPopUp({ event, onClose }) {
             <p className="text-gray-600">{event.eventDescription}</p>
           </div>
         )}
+        
+        {event.notable_link_name && event.notable_link_url && (
+          <div className="border-t border-gray-300 pt-4">
+            <h2 className="text-lg font-bold text-black mb-2">Additional Information</h2>
+            <a
+              href={event.notable_link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-4 py-2 bg-blue-500 text-white rounded-md text-sm font-semibold hover:bg-blue-600 transition"
+            >
+              {event.notable_link_name}
+            </a>
+          </div>
+        )}
+        
         {mapUrl && (
           <div className="border-t border-gray-300 pt-4">
             <h2 className="text-lg font-bold text-black">Map</h2>
