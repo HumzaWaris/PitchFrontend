@@ -504,7 +504,7 @@ export default function Housing() {
 
   return (
     <section id="housing" className="min-h-screen bg-white">
-      <nav className="flex justify-between items-center bg-white p-4 shadow-md rounded-lg">
+      <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md rounded-lg">
         <div className="flex space-x-6">
           <Link href="/">
             <Image
@@ -530,7 +530,7 @@ export default function Housing() {
               <div className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold">
                 {displayName}
               </div>
-              {showUserOptions && <UserOptionsPopup onLogout={logout} />}
+              {showUserOptions && <UserOptionsPopup onLogout={logout}/>}
             </div>
         ) : (
             <button
@@ -544,7 +544,7 @@ export default function Housing() {
 
       <div className="py-12 container mx-auto px-6 lg:px-12">
         {!isLoggedIn ? (
-          <div className="text-center text-red-600 font-semibold">Please login to get access to the information.</div>
+            <div className="text-center text-red-600 font-semibold">Please login to get access to the information.</div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
@@ -612,7 +612,7 @@ export default function Housing() {
             <div className="flex flex-col space-y-6">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-black">
-                  Housing ({filteredListings.length} listings)
+                  ({filteredListings.length} listings)
                 </h1>
               </div>
 
@@ -628,10 +628,14 @@ export default function Housing() {
                       >
                         <div className="relative" onClick={(e) => e.stopPropagation()}>
                           <ImageCarousel images={urls} />
-                          {l.sublettingTrue && (
-                              <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm z-10">
-                            Sublet
-                          </span>
+                          {l.sublettingTrue ? (
+                              <span className="absolute top-4 left-5 bg-green-500 text-white px-3 py-1 rounded-full text-sm z-10">
+                                Sublet
+                              </span>
+                          ) : (
+                              <span className="absolute top-4 left-5 bg-blue-500 text-white px-3 py-1 rounded-full text-sm z-10">
+                                Roommate
+                              </span>
                           )}
                         </div>
                         <div className="p-4">

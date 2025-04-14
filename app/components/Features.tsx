@@ -33,7 +33,7 @@ export default function Features() {
             icon: "bi bi-file-earmark-text",
             title: "Schedule Rater",
             description:
-                "Upload a PDF of your schedule and get a rating based on difficulty, time gaps, and efficiency to optimize your college experience.",
+                "Coming Soon!",
             link: "/schedule-rater",
         }
     ];

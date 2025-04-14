@@ -4,7 +4,7 @@ export default function Navbar() {
             <div className="container mx-auto px-4 py-3 flex items-center justify-between">
                 {/* Logo */}
                 <a href="#" className="flex items-center">
-                    <img src="/images/Huddle_Social_Black.png" alt="Huddle Logo" className="h-16" />
+                    <img src="/images/Huddle_Social.png" alt="Huddle Logo" className="h-16" />
                     <span className="ml-2 text-lg font-bold"></span>
                 </a>
 
