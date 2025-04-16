@@ -16,7 +16,6 @@ import BuildIcon from "@mui/icons-material/Build";
 import CelebrationIcon from "@mui/icons-material/Celebration";
 import PublicIcon from "@mui/icons-material/Public";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
-
 const tagIcon = {
   games: <SportsEsportsIcon style={{ color: "black" }} />,
   sports: <SportsSoccerIcon style={{ color: "black" }} />,
@@ -178,7 +177,6 @@ function ModalPopUp({ event, onClose }) {
             <p className="text-gray-600">{event.eventDescription}</p>
           </div>
         )}
-        
         {event.notable_link_name && event.notable_link_url && (
           <div className="border-t border-gray-300 pt-4">
             <h2 className="text-lg font-bold text-black mb-2">Additional Information</h2>
@@ -192,7 +190,6 @@ function ModalPopUp({ event, onClose }) {
             </a>
           </div>
         )}
-        
         {mapUrl && (
           <div className="border-t border-gray-300 pt-4">
             <h2 className="text-lg font-bold text-black">Map</h2>
@@ -213,8 +210,6 @@ export default function Events() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("User");
   const [showUserOptions, setShowUserOptions] = useState(false);
-  const isLoggedIn = displayName !== "User";
-
   const [eventsData, setEventsData] = useState([]);
   const [activeTab, setActiveTab] = useState("Semester");
   const [selectedTags, setSelectedTags] = useState([]);
@@ -223,58 +218,30 @@ export default function Events() {
   const [visibleDays, setVisibleDays] = useState(3);
   const [infiniteTarget, setInfiniteTarget] = useState(null);
 
-  // useEffect(() => {
-  //   const n = localStorage.getItem("displayname");
-  //   if (n) setDisplayName(n);
-  // }, []);
-
-  // useEffect(() => {
-  //   const q = query(collection(db, "Purdue University"), orderBy("eventDate", "asc"));
-  //   const unsub = onSnapshot(q, (s) => {
-  //     const ev = s.docs.map((d) => {
-  //       const data = d.data();
-  //       const dt = data.eventDate?.toDate ? data.eventDate.toDate() : new Date(data.eventDate);
-  //       return { id: d.id, ...data, eventDate: dt };
-  //     });
-  //     setEventsData(ev);
-  //   });
-  //   return () => unsub();
-  // }, []);
   useEffect(() => {
     const n = localStorage.getItem("displayname");
     if (n) setDisplayName(n);
   }, []);
 
-  /* 3️⃣  —  fall back to Firebase if localStorage was empty */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
-
       const snap = await getDoc(doc(db, "users", user.uid));
       if (snap.exists()) {
-        const n =
-          snap.data().displayname || user.displayName || "User";
-
+        const n = snap.data().displayname || user.displayName || "User";
         setDisplayName(n);
-        localStorage.setItem("displayname", n);   // write it for next time
+        localStorage.setItem("displayname", n);
       }
     });
     return () => unsub();
   }, []);
 
-  /* 4️⃣  —  realtime events feed (unchanged) */
   useEffect(() => {
-    const q = query(
-      collection(db, "Purdue University"),
-      orderBy("eventDate", "asc")
-    );
+    const q = query(collection(db, "Purdue University"), orderBy("eventDate", "asc"));
     const unsub = onSnapshot(q, (s) => {
       const ev = s.docs.map((d) => {
         const data = d.data();
-        const dt =
-          data.eventDate?.toDate
-            ? data.eventDate.toDate()
-            : new Date(data.eventDate);
+        const dt = data.eventDate?.toDate ? data.eventDate.toDate() : new Date(data.eventDate);
         return { id: d.id, ...data, eventDate: dt };
       });
       setEventsData(ev);
@@ -298,7 +265,11 @@ export default function Events() {
     const dayStr =
       activeTab === "Weekly"
         ? evt.eventDate.toLocaleDateString("en-US", { weekday: "long" })
-        : evt.eventDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        : evt.eventDate.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
     (acc[dayStr] ||= []).push(evt);
     return acc;
   }, {});
@@ -340,101 +311,82 @@ export default function Events() {
             <span className="mr-1">🏠</span>Housing
           </Link>
         </div>
-        {isLoggedIn ? (
+        {displayName === "User" ? (
+          <button onClick={() => router.push("/login")} className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold hover:scale-105 transition">
+            Sign In
+          </button>
+        ) : (
           <div className="relative cursor-pointer hover:scale-105 transition" onClick={() => setShowUserOptions(!showUserOptions)}>
             <div className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold">{displayName}</div>
             {showUserOptions && <UserOptionsPopup onLogout={logout} />}
           </div>
-        ) : (
-          <button onClick={() => router.push("/login")} className="px-4 py-2 rounded-full bg-gray-200 text-black font-semibold hover:scale-105 transition">
-            Sign In
-          </button>
         )}
       </nav>
 
       <div className="py-12 container mx-auto px-6 lg:px-12">
-        {!isLoggedIn ? (
-          <div className="text-center text-red-600 font-semibold">Please login to get access to the information.</div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-4xl font-bold text-black">Events</h3>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setActiveTab("Weekly")}
-                  className={`px-3 py-1 rounded-full font-bold transition ${
-                    activeTab === "Weekly" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
-                  } hover:scale-105`}
-                >
-                  Weekly
-                </button>
-                <button
-                  onClick={() => setActiveTab("Semester")}
-                  className={`px-3 py-1 rounded-full font-bold transition ${
-                    activeTab === "Semester" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
-                  } hover:scale-105`}
-                >
-                  Semester
-                </button>
-                <button
-                  onClick={() => setShowFilterModal(true)}
-                  className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
-                >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1
-                    1 0 011 1v2a1 1 0 01-.293.707l-5.414
-                    5.414A1 1 0 0014 12.414V19l-4
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-4xl font-bold text-black">Events</h3>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => setActiveTab("Weekly")}
+              className={`px-3 py-1 rounded-full font-bold transition ${
+                activeTab === "Weekly" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
+              } hover:scale-105`}
+            >
+              Weekly
+            </button>
+            <button
+              onClick={() => setActiveTab("Semester")}
+              className={`px-3 py-1 rounded-full font-bold transition ${
+                activeTab === "Semester" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
+              } hover:scale-105`}
+            >
+              Semester
+            </button>
+            <button
+              onClick={() => setShowFilterModal(true)}
+              className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1
+                    1 0 011 1v2a1 1 0 01-.293.707l-5.414 5.414A1 1 0 0014 12.414V19l-4
                     2v-8.586a1 1 0 00-.293-.707L4.293
-                    6.707A1 1 0 014 6V4z"
-                />
+                    6.707A1 1 0 014 6V4z" />
               </svg>
-                  All Filters
-                </button>
-              </div>
-            </div>
-
-            {dayKeysToShow.map((day) => (
-              <div key={day} className="mb-8">
-                <h2 className="text-3xl font-bold text-black mb-2">{day}</h2>
-                <div className="border-b border-dotted border-gray-300 mb-4" />
-                <div className="space-y-4">
-                  {eventsByDay[day].map((evt) => (
-                    <div
-                      key={evt.id}
-                      onClick={() => setSelectedEvent(evt)}
-                      className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-md shadow-sm p-3 flex items-center space-x-4 cursor-pointer hover:shadow-lg transition w-full"
-                    >
-                      {evt.flyer_image && <Image src={evt.flyer_image} width={120} height={120} className="rounded-md object-cover" alt={evt.eventTitle} />}
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-black mb-1">{evt.eventTitle || "No Title"}</h3>
-                        <p className="text-sm text-gray-500 mb-1">
-                          {evt.eventDate.toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
-                        </p>
-                        <p className="text-sm text-gray-700">{evt.eventLocation || "No Address"}</p>
-                        <TagIcons tags={evt.tags || []} />
-                      </div>
-                    </div>
-                  ))}
+              All Filters
+            </button>
+          </div>
+        </div>
+        {dayKeysToShow.map((day) => (
+          <div key={day} className="mb-8">
+            <h2 className="text-3xl font-bold text-black mb-2">{day}</h2>
+            <div className="border-b border-dotted border-gray-300 mb-4"></div>
+            <div className="space-y-4">
+              {eventsByDay[day].map((evt) => (
+                <div
+                  key={evt.id}
+                  onClick={() => setSelectedEvent(evt)}
+                  className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-md shadow-sm p-3 flex items-center space-x-4 cursor-pointer hover:shadow-lg transition w-full"
+                >
+                  {evt.flyer_image && <Image src={evt.flyer_image} width={120} height={120} className="rounded-md object-cover" alt={evt.eventTitle} />}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-black mb-1">{evt.eventTitle || "No Title"}</h3>
+                    <p className="text-sm text-gray-500 mb-1">
+                      {evt.eventDate.toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+                    </p>
+                    <p className="text-sm text-gray-700">{evt.eventLocation || "No Address"}</p>
+                    <TagIcons tags={evt.tags || []} />
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={setInfiniteTarget} className="h-10" />
-          </>
-        )}
+              ))}
+            </div>
+          </div>
+        ))}
+        <div ref={setInfiniteTarget} className="h-10"></div>
       </div>
 
-      {isLoggedIn && selectedEvent && <ModalPopUp event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
-      {isLoggedIn && showFilterModal && <FilterModal onClose={() => setShowFilterModal(false)} selectedTags={selectedTags} setSelectedTags={setSelectedTags} />}
+      {selectedEvent && <ModalPopUp event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+      {showFilterModal && <FilterModal onClose={() => setShowFilterModal(false)} selectedTags={selectedTags} setSelectedTags={setSelectedTags} />}
     </div>
   );
 }

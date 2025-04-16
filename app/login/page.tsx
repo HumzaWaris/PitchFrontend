@@ -77,25 +77,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-      <button
-        onClick={() => router.back()}
-        className="absolute top-4 left-4 text-black text-sm"
-      >
+      <button onClick={() => router.back()} className="absolute top-4 left-4 text-black text-sm">
         &larr; Back
       </button>
       <div className="max-w-sm w-full bg-gray-50 p-6 rounded-md shadow">
-        <h1 className="text-2xl font-bold text-black mb-6 text-center">
-          Login.
-        </h1>
-        {errorMessage && (
-          <p className="text-red-500 text-sm mb-4 text-center">
-            {errorMessage}
-          </p>
-        )}
+        <h1 className="text-2xl font-bold text-black mb-6 text-center">Login</h1>
+        {errorMessage && <p className="text-red-500 text-sm mb-4 text-center">{errorMessage}</p>}
         <div className="mb-4">
-          <label className="block text-black text-sm font-semibold mb-1">
-            Email
-          </label>
+          <label className="block text-black text-sm font-semibold mb-1">Email</label>
           <input
             type="email"
             placeholder="Email Address"
@@ -105,9 +94,7 @@ export default function LoginPage() {
           />
         </div>
         <div className="mb-2 relative">
-          <label className="block text-black text-sm font-semibold mb-1">
-            Password
-          </label>
+          <label className="block text-black text-sm font-semibold mb-1">Password</label>
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
@@ -128,6 +115,12 @@ export default function LoginPage() {
           </button>
         </div>
         <div className="mb-6 text-right">
+          <button
+            onClick={() => router.push("/forgot")}
+            className="text-sm text-gray-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
         </div>
         <button
           onClick={handleLogin}

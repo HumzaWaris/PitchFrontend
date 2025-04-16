@@ -7,16 +7,13 @@ export const dynamic = "force-dynamic";   // never cache – we always want fres
  *   • capitalises first letter of each
  */
 function formatName(raw: string): string {
-  // Remove extra whitespace and split
   const parts = raw.trim().split(/\s+/);
 
-  // Handle “Last, First” style if it ever appears
   if (parts.length === 1 && raw.includes(",")) {
     const [last, first] = raw.split(",").map(s => s.trim());
     return `${capitalize(first)} ${capitalize(last)}`;
   }
 
-  // Pick first and last tokens (ignore middles/suffixes)
   const first = parts[0] ?? "";
   const last  = parts.length > 1 ? parts[parts.length - 1] : "";
 
