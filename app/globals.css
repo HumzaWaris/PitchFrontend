@@ -3,519 +3,522 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: #ffffff;
+    --foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
 }
 
 @font-face {
-  font-family: "Poppins-Regular";
-  src: url("./../public/fonts/Poppins-Regular.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
+    font-family: "Poppins-Regular";
+    src: url("./../public/fonts/Poppins-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  /* font-family: Arial, Helvetica, sans-serif; */
-  font-family: "Poppins-Regular";
+    color: var(--foreground);
+    background: var(--background);
+    /* font-family: Arial, Helvetica, sans-serif; */
+    font-family: "Poppins-Regular";
 }
 
 .navbar {
-  padding: 15px;
+    padding: 15px;
 }
-
 
 /* Banner Section */
 .banner {
-  background: linear-gradient(135deg, #5cb8ff, #00b09b); /* Gradient to match reference */
-  color: white;
-  padding: 100px 0;
-  text-align: left;
+    background: linear-gradient(135deg, #5cb8ff, #00b09b); /* Gradient to match reference */
+    color: white;
+    padding: 100px 0;
+    text-align: left;
 }
 
 /* Ensure Text is on the Left and Image on the Right */
 @media (min-width: 768px) {
-  .row.align-items-center {
-    display: flex;
-    flex-direction: row; /* Keep text on left and image on right */
-    justify-content: space-between;
-  }
+    .row.align-items-center {
+        display: flex;
+        flex-direction: row; /* Keep text on left and image on right */
+        justify-content: space-between;
+    }
 }
 
 /* Title & Text with Exact Sizes */
 .banner-title {
-  font-size: 2.3rem;
-  font-weight: bold;
-  width: 369.99px;
-  height: 76.8px;
-  margin-bottom: 20px;
+    font-size: 2.3rem;
+    font-weight: bold;
+    width: 369.99px;
+    height: 76.8px;
+    margin-bottom: 20px;
 }
 
 /* Ensure "Currently @ Purdue" is on the same line */
 .banner-subtitle {
-  font-size: 1.2rem;
-  font-weight: 600;
-  width: 161.82px;
-  height: 22.4px;
-  display: block; /* Ensures it appears right below the title */
-  margin-top: -10px; /* Adjust positioning */
-  margin-bottom: 30px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    width: 161.82px;
+    height: 22.4px;
+    display: block; /* Ensures it appears right below the title */
+    margin-top: -10px; /* Adjust positioning */
+    margin-bottom: 30px;
 }
 
 .banner-description {
-  font-size: 1rem;
-  line-height: 1.8;
-  width: 369.99px;
-  height: 147px;
-  margin-bottom: 40px;
+    font-size: 1rem;
+    line-height: 1.8;
+    width: 369.99px;
+    height: 147px;
+    margin-bottom: 40px;
 }
 
 .banner-waitlist-text {
-  font-size: 1rem;
-  width: 369.99px;
-  height: 38.4px;
-  margin-bottom: 20px;
+    font-size: 1rem;
+    width: 369.99px;
+    height: 38.4px;
+    margin-bottom: 20px;
 }
 
 /* Waitlist Form */
 .waitlist-form {
-  display: flex;
-  align-items: center;
-  margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
 }
 
 .waitlist-form input {
-  flex: 1;
-  border: none;
-  border-radius: 5px;
-  padding: 12px;
-  margin-right: 10px;
-  max-width: 70%;
-  font-size: 1rem;
-  color: #333;
-  background: #ffffff;
+    flex: 1;
+    border: none;
+    border-radius: 5px;
+    padding: 12px;
+    margin-right: 10px;
+    max-width: 70%;
+    font-size: 1rem;
+    color: #333;
+    background: #ffffff;
 }
 
 .waitlist-form input::placeholder {
-  color: #aaa;
+    color: #aaa;
 }
 
 .btn-signup {
-  background-color: #007BFF;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 5px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  transition: 0.3s ease;
+    background-color: #007bff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s ease;
 }
 
 .btn-signup:hover {
-  background-color: #0056b3;
+    background-color: #0056b3;
 }
 
 /* Waitlist Host Text */
 .waitlist-host {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
 }
 
 /* App Store Link */
 .appstore-link {
-  list-style: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
 }
 
 .appstore-img {
-  max-width: 180px;
+    max-width: 180px;
 }
 
 /* Banner Image */
 .banner-image {
-  max-width: 100%;
-  border-radius: 15px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  margin-left: 50px; /* Ensures spacing between text and image */
+    max-width: 100%;
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    margin-left: 50px; /* Ensures spacing between text and image */
 }
 
 /* Responsive Design */
 @media (max-width: 992px) {
-  .banner {
-    text-align: center;
-  }
+    .banner {
+        text-align: center;
+    }
 
-  .row.align-items-center {
-    flex-direction: column;
-    align-items: center;
-  }
+    .row.align-items-center {
+        flex-direction: column;
+        align-items: center;
+    }
 
-  .waitlist-form {
-    flex-direction: column;
-  }
+    .waitlist-form {
+        flex-direction: column;
+    }
 
-  .waitlist-form input {
-    max-width: 100%;
-    margin-bottom: 10px;
-  }
+    .waitlist-form input {
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
 
-  .btn-signup {
-    width: 100%;
-  }
+    .btn-signup {
+        width: 100%;
+    }
 
-  .banner-image {
-    margin-left: 0;
-    margin-top: 30px;
-  }
+    .banner-image {
+        margin-left: 0;
+        margin-top: 30px;
+    }
 }
-
 
 /* Waitlist Host Text */
 .waitlist-host {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 20px;
 }
 
 /* App Store Link */
 .appstore-link {
-  list-style: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
 }
 
 .appstore-img {
-  max-width: 180px;
+    max-width: 180px;
 }
 
 /* Banner Image */
 .banner-image {
-  max-width: 100%;
-  border-radius: 15px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    border-radius: 15px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive Design */
 @media (max-width: 992px) {
-  .banner {
-    text-align: center;
-  }
+    .banner {
+        text-align: center;
+    }
 
-  .waitlist-form {
-    flex-direction: column;
-  }
+    .waitlist-form {
+        flex-direction: column;
+    }
 
-  .waitlist-form input {
-    max-width: 100%;
-    margin-bottom: 10px;
-  }
+    .waitlist-form input {
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
 
-  .btn-signup {
-    width: 100%;
-  }
+    .btn-signup {
+        width: 100%;
+    }
 }
-
-
 
 /* Features Section */
 .features-section {
-  padding: 60px 0;
-  background-color: #fff;
-  text-align: center;
+    padding: 60px 0;
+    background-color: #fff;
+    text-align: center;
 }
 
 .features-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
-  gap: 40px 60px; /* Balanced spacing */
-  justify-content: center;
-  align-items: start;
-  max-width: 1000px;
-  margin: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
+    gap: 40px 60px; /* Balanced spacing */
+    justify-content: center;
+    align-items: start;
+    max-width: 1000px;
+    margin: auto;
 }
 
 /* Ensuring last row centers properly if it has one item */
 @media (min-width: 601px) {
-  .features-container > .feature-box:nth-child(5) {
-    grid-column: span 3; /* Forces Schedule Rater to center in last row */
-    justify-self: center;
-  }
+    .features-container > .feature-box:nth-child(5) {
+        grid-column: span 3; /* Forces Schedule Rater to center in last row */
+        justify-self: center;
+    }
 }
 
 /* Mobile adjustments */
 @media (max-width: 992px) {
-  .features-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns per row */
-  }
+    .features-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns per row */
+    }
 }
 
 @media (max-width: 600px) {
-  .features-container {
-    grid-template-columns: repeat(1, 1fr); /* 1 column per row */
-  }
+    .features-container {
+        grid-template-columns: repeat(1, 1fr); /* 1 column per row */
+    }
 }
 
-
-
 .feature-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
 }
 
 /* Icon Styling */
 /* Icon Styling */
 .feature-icon {
-  background: linear-gradient(135deg, #00b09b, #96c93d); /* Green gradient */
-  border-radius: 50%;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 15px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    background: linear-gradient(135deg, #00b09b, #96c93d); /* Green gradient */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
 }
 
 /* Make Icons White */
 .feature-icon i {
-  font-size: 2.5rem;
-  color: #ffffff !important; /* Force white color */
+    font-size: 2.5rem;
+    color: #ffffff !important; /* Force white color */
 }
 
 /* Title Styling */
 .feature-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #171717;
-  margin-bottom: 5px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #171717;
+    margin-bottom: 5px;
 }
 
 /* Description Styling */
 .feature-description {
-  font-size: 16px;
-  color: #666;
-  max-width: 300px;
+    font-size: 16px;
+    color: #666;
+    max-width: 300px;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 992px) {
-  .features-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 per row for tablets */
-  }
+    .features-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 per row for tablets */
+    }
 }
 
 @media (max-width: 600px) {
-  .features-container {
-    grid-template-columns: repeat(1, 1fr); /* 1 per row for mobile */
-  }
+    .features-container {
+        grid-template-columns: repeat(1, 1fr); /* 1 per row for mobile */
+    }
 }
 
-
 .download-app {
-  background: linear-gradient(135deg, #96c93d, #00b09b);
-  color: white;
-  padding: 50px 0;
+    background: linear-gradient(135deg, #96c93d, #00b09b);
+    color: white;
+    padding: 50px 0;
 }
 
 .team {
-  padding: 50px 0;
-  display: flex;
-  justify-content: center;
+    padding: 50px 0;
+    display: flex;
+    justify-content: center;
 }
 
 /* Current Team Grid */
 .team-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns per row */
-  gap: 40px 80px; /* Space between rows and columns */
-  justify-content: center;
-  text-align: center;
-  max-width: 900px;
-  margin: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns per row */
+    gap: 40px 80px; /* Space between rows and columns */
+    justify-content: center;
+    text-align: center;
+    max-width: 900px;
+    margin: auto;
 }
 
 .team-member-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .team-member-card img {
-  width:  245px; /* Adjust image size */
-  height: 245px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 10px; /* Adds spacing below the image */
+    width: 245px; /* Adjust image size */
+    height: 245px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px; /* Adds spacing below the image */
 }
 
 .team-member-card h4 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #6c63ff; /* Purple color for names */
-  margin-bottom: 5px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #6c63ff; /* Purple color for names */
+    margin-bottom: 5px;
 }
 
 .team-member-card p {
-  font-size: 16px;
-  color: #666;
-  margin: 0;
+    font-size: 16px;
+    color: #666;
+    margin: 0;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 992px) {
-  .team-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 per row for tablets */
-  }
+    .team-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 per row for tablets */
+    }
 }
 
 @media (max-width: 600px) {
-  .team-container {
-    grid-template-columns: repeat(1, 1fr); /* 1 per row for mobile */
-  }
+    .team-container {
+        grid-template-columns: repeat(1, 1fr); /* 1 per row for mobile */
+    }
 }
 
-
-
 .sectioner-header h3 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
 }
 
 .sectioner-header .line {
-  display: block;
-  width: 50px;
-  height: 3px;
-  background-color: #6c63ff;
-  margin: 10px auto;
+    display: block;
+    width: 50px;
+    height: 3px;
+    background-color: #6c63ff;
+    margin: 10px auto;
 }
 
 .section-content .row {
-  margin-top: 20px;
+    margin-top: 20px;
 }
 
 body {
-  margin: 0;
-  font-family: "Poppins-Regular";
+    margin: 0;
+    font-family: "Poppins-Regular";
 }
 
 /* General Banner Styling */
 .banner h1 {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .banner h4 {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .banner p {
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
 .waitlist-form input {
-  min-height: 50px;
+    min-height: 50px;
 }
 
 .waitlist-form button {
-  min-height: 50px;
+    min-height: 50px;
 }
 
 .banner img {
-  margin-top: 20px;
+    margin-top: 20px;
 }
 
 .features-section {
-  padding: 60px 0;
-  background-color: #fff;
+    padding: 60px 0;
+    background-color: #fff;
 }
 
 .features-section h3 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 20px;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
 .features-section .feature-icon {
-  background-color: rgba(0, 176, 155, 0.1);
-  border-radius: 50%;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    background-color: rgba(0, 176, 155, 0.1);
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .features-section .feature-icon i {
-  font-size: 2.5rem;
-  color: #00b09b;
+    font-size: 2.5rem;
+    color: #00b09b;
 }
 
 .features-section h5 {
-  font-weight: 600;
-  font-size: 1.2rem;
-  margin-bottom: 15px;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-bottom: 15px;
 }
 
 .features-section p {
-  font-size: 1rem;
-  color: #666;
-  text-align: center;
+    font-size: 1rem;
+    color: #666;
+    text-align: center;
 }
 
 /* Past Contributors Grid */
 .past-contributors-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
-  gap: 40px 80px; /* Vertical and horizontal spacing */
-  justify-content: center;
-  text-align: center;
-  max-width: 900px;
-  margin: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+    gap: 40px 80px; /* Vertical and horizontal spacing */
+    justify-content: center;
+    text-align: center;
+    max-width: 900px;
+    margin: auto;
 }
 
 .past-contributor-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .past-contributor-card h4 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #171717; /* Dark text for better contrast */
-  margin-bottom: 5px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #171717; /* Dark text for better contrast */
+    margin-bottom: 5px;
 }
 
 .past-contributor-card p {
-  font-size: 16px;
-  color: #666;
-  margin: 0;
+    font-size: 16px;
+    color: #666;
+    margin: 0;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 992px) {
-  .past-contributors-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for tablets */
-  }
+    .past-contributors-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for tablets */
+    }
 }
 
 @media (max-width: 600px) {
-  .past-contributors-container {
-    grid-template-columns: repeat(1, 1fr); /* 1 column for small screens */
-  }
+    .past-contributors-container {
+        grid-template-columns: repeat(1, 1fr); /* 1 column for small screens */
+    }
 }
 
+@keyframes floating {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
 
-
-
+.animate-floating {
+    animation: floating 6s ease-in-out infinite;
+}
