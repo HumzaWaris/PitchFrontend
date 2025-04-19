@@ -45,13 +45,9 @@ export default function Banner() {
                         <div className="mt-6">
                             <a
                                 href="https://apps.apple.com/us/app/imboard/id6449878483"
-                                className="inline-block"
+                                className="inline-block rounded-xl overflow-hidden shadow-md transition-transform hover:scale-105"
                             >
-                                <img
-                                    src="/images/appstore.png"
-                                    alt="App Store"
-                                    className="h-12"
-                                />
+                                <img src="/images/appstore.png" alt="App Store" className="h-12 rounded-xl" />
                             </a>
                         </div>
                     </div>
