@@ -298,11 +298,13 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md rounded-lg">
+    <div className="min-h-screen bg-white" style={{
+      background: 'linear-gradient(rgba(0, 176, 155, 0.2) 0%, rgba(92, 184, 255, 0.1) 52.58%, rgba(255, 255, 255, 0) 100%)'
+    }}>
+      <nav className="flex items-center justify-between px-6 py-4 rounded-lg">
         <div className="flex items-center space-x-5">
           <Link href="/">
-            <Image src="/images/Huddle_Social_White_Background.png" alt="Logo" width={50} height={50} className="rounded-full object-cover" />
+            <Image src="/images/Huddle_Social_Icon_Transparent_Background.png" alt="Logo" width={50} height={50} className="rounded-full object-cover" />
           </Link>
           <Link href="/events" className="text-black font-semibold flex items-center hover:scale-105 transition">
             <span className="mr-1">📅</span>Events
@@ -323,14 +325,14 @@ export default function Events() {
         )}
       </nav>
 
-      <div className="py-12 container mx-auto px-6 lg:px-12">
+      <div className="py-12 container mx-auto px-6 lg:px-12" >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-4xl font-bold text-black">Events</h3>
           <div className="flex space-x-3">
             <button
               onClick={() => setActiveTab("Weekly")}
               className={`px-3 py-1 rounded-full font-bold transition ${
-                activeTab === "Weekly" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
+                activeTab === "Weekly" ? "bg-gray-200 text-black" : "bg-white border text-black hover:bg-gray-100"
               } hover:scale-105`}
             >
               Weekly
@@ -338,14 +340,14 @@ export default function Events() {
             <button
               onClick={() => setActiveTab("Semester")}
               className={`px-3 py-1 rounded-full font-bold transition ${
-                activeTab === "Semester" ? "bg-gray-300 text-black" : "bg-white border border-black text-black hover:bg-gray-100"
+                activeTab === "Semester" ? "bg-gray-200 text-black" : "bg-white border text-black hover:bg-gray-100"
               } hover:scale-105`}
             >
               Semester
             </button>
             <button
               onClick={() => setShowFilterModal(true)}
-              className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
+              className="px-3 py-1 rounded-full bg-gray-200 text-black font-bold flex items-center hover:scale-105 transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1
@@ -366,7 +368,7 @@ export default function Events() {
                 <div
                   key={evt.id}
                   onClick={() => setSelectedEvent(evt)}
-                  className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-md shadow-sm p-3 flex items-center space-x-4 cursor-pointer hover:shadow-lg transition w-full"
+                  className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow-sm p-3 flex items-center space-x-4 cursor-pointer hover:shadow-lg transition w-full"
                 >
                   {evt.flyer_image && <Image src={evt.flyer_image} width={120} height={120} className="rounded-md object-cover" alt={evt.eventTitle} />}
                   <div className="flex-1">

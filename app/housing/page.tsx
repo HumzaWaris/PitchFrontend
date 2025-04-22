@@ -503,12 +503,14 @@ export default function Housing() {
   };
 
   return (
-    <section id="housing" className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md rounded-lg">
+    <section id="housing" className="min-h-screen bg-white" style={{
+      background: 'linear-gradient(rgba(0, 176, 155, 0.2) 0%, rgba(92, 184, 255, 0.1) 52.58%, rgba(255, 255, 255, 0) 100%)'
+    }}>
+      <nav className="flex items-center justify-between px-6 py-4 rounded-lg">
         <div className="flex items-center space-x-5">
           <Link href="/">
             <Image
-                src="/images/Huddle_Social_White_Background.png"
+                src="/images/Huddle_Social_Icon_Transparent_Background.png"
                 alt="Huddle Social Logo"
                 width={50}
                 height={50}
@@ -542,7 +544,7 @@ export default function Housing() {
         )}
       </nav>
 
-      <div className="py-12 container mx-auto px-6 lg:px-12">
+      <div className="py-12 container mx-auto px-6 lg:px-12"  >
         {!isLoggedIn ? (
             <div className="text-center text-red-600 font-semibold">Please login to get access to the information.</div>
         ) : (
@@ -552,7 +554,7 @@ export default function Housing() {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowFilterModal(true)}
-                  className="px-3 py-1 rounded-full bg-gray-300 text-black font-bold flex items-center hover:scale-105 transition"
+                  className="px-3 py-1 rounded-full bg-gray-200 text-black font-bold flex items-center hover:scale-105 transition"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -624,7 +626,7 @@ export default function Housing() {
                       <div
                           key={l.id}
                           onClick={() => setSelectedListing(l)}
-                          className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+                          className="bg-white shadow-md rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition"
                       >
                         <div className="relative" onClick={(e) => e.stopPropagation()}>
                           <ImageCarousel images={urls} />
