@@ -55,22 +55,31 @@ function CreateAccountForm() {
       return;
     }
 
+    if (!auth || !db) {
+      setError("Firebase is not initialized properly");
+      setLoading(false);
+      return;
+    }
+
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
 
       await sendEmailVerification(user);
 
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          displayname: name,
-          email,
-          college: university,
-          memberSince: `${new Date().getFullYear()}`,
-        },
-        { merge: true }
-      );
+      const userDoc = doc(db, "users", user.uid);
+      const userData = {
+        displayname: name,
+        email: email,
+        college: university,
+        memberSince: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        emailVerified: false,
+        uid: user.uid
+      };
+
+      await setDoc(userDoc, userData);
 
       router.push("/signup/verify");
     } catch (err: any) {
@@ -103,7 +112,7 @@ function CreateAccountForm() {
             className="w-full p-3 border rounded text-black"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            readOnly={!!defaultName}        // locked if we found it
+            readOnly={!!defaultName}
             required
           />
           <input
@@ -111,7 +120,7 @@ function CreateAccountForm() {
             placeholder="Email"
             className="w-full p-3 border rounded text-black"
             value={email}
-            readOnly                                      // always locked
+            readOnly
           />
 
           {/* Password */}
@@ -192,7 +201,11 @@ function CreateAccountForm() {
 
 export default function AccountInfoPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-black">Loading account information...</div>
+      </div>
+    }>
       <CreateAccountForm />
     </Suspense>
   );
