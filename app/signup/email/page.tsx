@@ -3,11 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 
 const MAX_ATTEMPTS = 3;
 
-export default function EnterEmailPage() {
+function EmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -48,7 +48,7 @@ export default function EnterEmailPage() {
         attempts.current += 1;
         if (attempts.current >= MAX_ATTEMPTS) {
           const bypass = window.confirm(
-            "We can’t find you in the Purdue directory. Continue anyway?"
+            "We can't find you in the Purdue directory. Continue anyway?"
           );
           if (bypass) {
             router.push(
@@ -105,5 +105,13 @@ export default function EnterEmailPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function EnterEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <EmailForm />
+    </Suspense>
   );
 }
