@@ -3,13 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { auth, db } from "@/lib/firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
-export default function AccountInfoPage() {
+function CreateAccountForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -187,5 +187,13 @@ export default function AccountInfoPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AccountInfoPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <CreateAccountForm />
+    </Suspense>
   );
 }
