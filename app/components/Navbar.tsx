@@ -1,12 +1,14 @@
+import Link from 'next/link';
+
 export default function Navbar() {
     return (
         <nav className="bg-gradient-to-r from-green-400 via-green-450 to-blue-400 text-white">
             <div className="container mx-auto px-4 py-3 flex items-center justify-between">
                 {/* Logo */}
-                <a href="#" className="flex items-center">
+                <Link href="/" className="flex items-center">
                     <img src="/images/Huddle_Social.png" alt="Huddle Logo" className="h-16" />
                     <span className="ml-2 text-lg font-bold"></span>
-                </a>
+                </Link>
 
                 {/* Hamburger Menu for Mobile */}
                 <button
@@ -18,40 +20,46 @@ export default function Navbar() {
 
                 {/* Navbar Links */}
                 <div className="hidden lg:flex items-center space-x-4">
-                    <a
-                        href="#home"
+                    <Link
+                        href="/"
                         className="text-sm font-medium hover:text-purple-700 transition duration-200"
                     >
                         Home
-                    </a>
-                    <a
-                        href="#features"
+                    </Link>
+                    <Link
+                        href="/#features"
                         className="text-sm font-medium hover:text-purple-700 transition duration-200"
                     >
                         Features
-                    </a>
-                    <a
-                        href="#team"
+                    </Link>
+                    <Link
+                        href="/#team"
                         className="text-sm font-medium hover:text-purple-700 transition duration-200"
                     >
                         Team
-                    </a>
+                    </Link>
+                    <Link
+                        href="/about"
+                        className="text-sm font-medium hover:text-purple-700 transition duration-200"
+                    >
+                        About
+                    </Link>
                 </div>
 
                 {/* Authentication Buttons */}
                 <div className="hidden lg:flex items-center space-x-4">
-                    <a
+                    <Link
                         href="/login"
                         className="text-sm font-medium px-4 py-2 border border-white rounded-md hover:bg-white hover:text-green-500 transition duration-200"
                     >
                         Login
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                         href="/signup/college"
                         className="text-sm font-medium px-4 py-2 bg-white text-green-500 rounded-md hover:bg-green-500 hover:text-white transition duration-200"
                     >
                         Sign Up
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Dropdown for Small Screens */}
