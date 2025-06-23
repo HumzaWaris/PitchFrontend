@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import React from "react";
 import ScheduleScoreDetails from "./ScheduleScoreDetails";
+import locations from '../lib/locations.json';
 
 type RmpComment = {
   qualityRating: number;
@@ -130,6 +131,7 @@ function parseScheduleRaterJson(data: ScheduleRaterJson) {
     weaknesses: courseData.comments_summary?.weaknesses || [],
   }));
 
+  // Add summaryCourse, summaryStrength, summaryWeakness (default to null)
   return {
     finalScore: Math.round(finalScore * 100) / 100,
     hecticnessScore: Math.round(hecticnessScore * 100) / 100,
@@ -145,6 +147,9 @@ function parseScheduleRaterJson(data: ScheduleRaterJson) {
     highestWouldTakeAgain: highestWouldTakeAgain !== -Infinity ? Math.round(highestWouldTakeAgain) : null,
     mostReviewedCourse,
     mostReviews: mostReviews !== -Infinity ? mostReviews : null,
+    summaryCourse: null,
+    summaryStrength: null,
+    summaryWeakness: null,
     allCourses,
   };
 }
@@ -220,6 +225,126 @@ const loadingTips = [
 
 // Add a mapping for day abbreviations
 const dayAbbr: Record<string, string> = { Mon: 'M', Tue: 'T', Wed: 'W', Thu: 'Th', Fri: 'F', Sat: 'Sa', Sun: 'Su' };
+
+// Helper for time options
+const timeOptions = Array.from({ length: 56 }, (_, i) => {
+  const hour = Math.floor(i / 4) + 7;
+  const min = (i % 4) * 15;
+  return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+});
+
+// Helper for location search
+type LocationDropdownProps = { value: string; onChange: (val: string) => void; inputClassName?: string };
+function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDropdownProps) {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const filtered = Object.entries(locations).filter(([code, name]) =>
+    `${code} - ${name}`.toLowerCase().includes(search.toLowerCase())
+  );
+  return (
+    <div className="relative w-full">
+      <input
+        className={`w-full border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 text-xs sm:text-sm h-10 ${inputClassName}`}
+        value={search || value}
+        onFocus={() => setOpen(true)}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search location"
+      />
+      {open && (
+        <div className="absolute z-40 bg-white border border-cyan-200 shadow-xl rounded-lg max-h-40 overflow-y-auto w-full">
+          {filtered.length === 0 && <div className="p-2 text-gray-400">No results</div>}
+          {filtered.map(([code, name]) => (
+            <div
+              key={code}
+              className="px-3 py-2 hover:bg-cyan-50 cursor-pointer text-xs sm:text-sm"
+              onClick={() => { onChange(`${code} - ${name}`); setSearch(''); setOpen(false); }}
+            >
+              {code} - {name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper for days multi-select
+const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+type DaysDropdownProps = { value: string[]; onChange: (days: string[]) => void };
+function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDropdownProps & { dropdownWidthClass?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        className="w-full border border-gray-300 rounded-md px-3 py-2 text-left bg-white hover:bg-cyan-50 flex justify-between items-center min-h-[48px] text-base"
+        onClick={() => setOpen(o => !o)}
+      >
+        <span className="flex flex-wrap gap-1 items-center">
+          {value.length > 0 ? (
+            value.map((day: string) => (
+              <span key={day} className="inline-flex items-center px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold border border-cyan-300 align-middle">
+                {dayAbbr[day]}
+              </span>
+            ))
+          ) : (
+            <span className="text-gray-400">Days</span>
+          )}
+        </span>
+        <span className="flex items-center justify-center h-full"><svg className="w-5 h-5 text-cyan-400 align-middle ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></span>
+      </button>
+      <div className={`absolute left-0 top-10 z-30 bg-white border border-cyan-200 shadow-xl rounded-lg p-2 min-w-[100px] ${dropdownWidthClass} overflow-hidden transition-all duration-200 ${open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`} style={{transformOrigin: 'top'}}>
+        {open && (
+          <div className="flex flex-col gap-1">
+            {allDays.map((day: string) => (
+              <label key={day} className="flex items-center py-1 px-2 rounded hover:bg-cyan-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={value.includes(day)}
+                  onChange={e => {
+                    if (e.target.checked) onChange([...value, day]);
+                    else onChange(value.filter((d: string) => d !== day));
+                  }}
+                  className="mr-2 accent-cyan-500"
+                />
+                <span className="text-gray-700 text-xs sm:text-sm">{day}</span>
+                {value.includes(day) && (
+                  <svg className="w-4 h-4 ml-1 text-cyan-500" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                )}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Helper for info icon with tooltip
+type InfoIconProps = { text: string };
+function InfoIcon({ text }: InfoIconProps) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="relative ml-1">
+      <button
+        type="button"
+        className="text-cyan-500 hover:text-cyan-700 focus:outline-none"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+        tabIndex={0}
+      >
+        <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
+      </button>
+      {show && (
+        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-cyan-200 rounded-lg shadow-lg p-3 text-xs text-gray-700 z-50">
+          {text}
+        </div>
+      )}
+    </span>
+  );
+}
 
 export default function ScheduleRater() {
   const [weightage, setWeightage] = useState({
@@ -410,198 +535,51 @@ export default function ScheduleRater() {
         {/* Schedule Editor Section */}
         {scheduleGenerated && (
           <>
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-green-200 w-full max-w-7xl mx-auto">
-              <h2 className="text-2xl font-semibold mb-6 text-green-700">Edit Schedule</h2>
-              <div className="overflow-x-visible">
-                <table ref={tableRef} className="min-w-full w-full border border-gray-200 rounded-lg text-sm">
-                  <thead>
-                    <tr className="bg-green-50">
-                      <th className="px-2 py-1 min-w-[90px]">Course Subject</th>
-                      <th className="px-2 py-1 min-w-[90px]">Course Code</th>
-                      <th className="px-2 py-1 min-w-[90px]">Course Type</th>
-                      <th className="px-2 py-1 min-w-[120px]">Course Days</th>
-                      <th className="px-2 py-1 min-w-[140px]">Course Time</th>
-                      <th className="px-2 py-1 min-w-[120px]">Course Location</th>
-                      <th className="px-2 py-1 min-w-[140px]">Instructor Name</th>
-                      <th className="px-2 py-1 min-w-[70px]">Credits</th>
-                      <th className="px-2 py-1"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schedule.map((row, idx) => (
-                      <tr key={idx} className="border-t">
-                        <td className="px-2 py-1">
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2"
-                            value={row.courseSubject}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseSubject = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. CS"
-                          />
-                        </td>
-                        <td className="px-2 py-1">
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2"
-                            value={row.courseCode}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseCode = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. 101"
-                          />
-                        </td>
-                        <td className="px-2 py-1">
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2"
-                            value={row.courseType}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseType = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. Lecture"
-                          />
-                        </td>
-                        <td className="px-2 py-1 relative min-w-[120px]">
-                          <div className="relative">
-                            <button
-                              type="button"
-                              className="w-full border rounded-md p-1 text-left bg-white hover:bg-cyan-50 flex flex-wrap gap-1 min-h-[36px]"
-                              onClick={() => setOpenDaysDropdown(openDaysDropdown === idx ? null : idx)}
-                            >
-                              {row.courseDays.length > 0 ? (
-                                row.courseDays.map(day => (
-                                  <span key={day} className="inline-flex items-center px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold border border-cyan-300 mr-1 mb-1">
-                                    {dayAbbr[day]}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-gray-400">Select Days</span>
-                              )}
-                              <svg className="w-4 h-4 ml-auto text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                            {openDaysDropdown === idx && (
-                              <div className="absolute left-0 top-10 z-30 bg-white border border-cyan-200 shadow-xl rounded-lg p-2 max-w-xs min-w-[160px] w-44 overflow-hidden" style={{ right: 0 }}>
-                                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
-                                  <label key={day} className="flex items-center py-1 px-2 rounded hover:bg-cyan-50 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={row.courseDays.includes(day)}
-                                      onChange={e => {
-                                        const newSchedule = [...schedule];
-                                        if (e.target.checked) {
-                                          newSchedule[idx].courseDays = [...row.courseDays, day];
-                                        } else {
-                                          newSchedule[idx].courseDays = row.courseDays.filter(d => d !== day);
-                                        }
-                                        setSchedule(newSchedule);
-                                      }}
-                                      className="mr-2 accent-cyan-500"
-                                    />
-                                    <span className="text-gray-700 text-sm">{day}</span>
-                                    {row.courseDays.includes(day) && (
-                                      <svg className="w-4 h-4 ml-1 text-cyan-500" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                    )}
-                                  </label>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2 py-1 flex gap-2 items-center">
-                          <input
-                            type="time"
-                            className="border rounded-md p-2 w-24"
-                            value={row.courseTime.start}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseTime.start = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="Start"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            className="border rounded-md p-2 w-24"
-                            value={row.courseTime.end}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseTime.end = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="End"
-                          />
-                        </td>
-                        <td className="px-2 py-1">
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2"
-                            value={row.courseLocation}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].courseLocation = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. WALC 101"
-                          />
-                        </td>
-                        <td className="px-2 py-1">
-                          <input
-                            type="text"
-                            className="w-full border rounded-md p-2"
-                            value={row.instructorName}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].instructorName = e.target.value;
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. Dr. Smith"
-                          />
-                        </td>
-                        <td className="px-2 py-1">
-                          <input
-                            type="number"
-                            min="0"
-                            className="w-full border rounded-md p-2"
-                            value={row.credits}
-                            onChange={e => {
-                              const newSchedule = [...schedule];
-                              newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, '');
-                              setSchedule(newSchedule);
-                            }}
-                            placeholder="e.g. 3"
-                          />
-                        </td>
-                        <td className="px-2 py-1 text-center">
-                          <button
-                            className="text-red-500 hover:text-red-700 font-bold px-2"
-                            onClick={() => {
-                              setSchedule(schedule.filter((_, i) => i !== idx));
-                            }}
-                            aria-label="Delete row"
-                          >
-                            ✕
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border border-green-200 w-full max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold text-green-700">Edit Schedule</h2>
+                <span className="text-gray-500 text-sm">Add, edit, or remove your classes below. <span className='hidden sm:inline'>Hover over headers for help.</span></span>
               </div>
-              <button
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600"
-                onClick={() => setSchedule([...schedule, initialScheduleRow])}
-              >
-                + Add Class
-              </button>
+              {/* Table wrapper for horizontal scroll */}
+              <div className="overflow-x-auto w-full">
+                <div className="min-w-[1200px]">
+                  <div className="grid grid-cols-12 gap-x-4 gap-y-2 items-center w-full text-base mb-2">
+                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2 rounded-tl-lg">Course Subject <span title='e.g. CS, MATH, ENG' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Code <span title='e.g. 101, 201' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Type <span title='e.g. Lecture, Lab' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Days <span title='Select all days this class meets' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1.5 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Start Time <span title='Class start time' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1.5 font-semibold text-center flex justify-center items-center bg-green-50 py-2">End Time <span title='Class end time' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Location <span title='e.g. WALC 101' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Instructor Name <span title='e.g. Dr. Smith' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Credits <span title='Number of credits' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
+                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2 rounded-tr-lg"></div>
+                  </div>
+                  {schedule.map((row, idx) => (
+                    <div className={`grid grid-cols-12 gap-x-4 gap-y-2 items-center w-full mb-3 py-3 text-base ${idx % 2 === 1 ? 'bg-gray-50' : ''}`} key={idx}>
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="CS" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="101" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[90px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Lecture" /></div>
+                      <div className="col-span-2 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-28" /></div>
+                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold" value={row.courseTime.start} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = e.target.value; setSchedule(newSchedule); }} placeholder="Start" /></div>
+                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold" value={row.courseTime.end} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = e.target.value; setSchedule(newSchedule); }} placeholder="End" /></div>
+                      <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[150px] h-12 px-3 py-2 overflow-x-auto resize-x" /></div>
+                      <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[150px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Dr. Smith" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[60px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="3" /></div>
+                      <div className="col-span-1 flex justify-center items-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-lg" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">✕</button></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 shadow-sm"
+                  onClick={() => setSchedule([...schedule, initialScheduleRow])}
+                >
+                  <span className="text-lg">＋</span> Add Class
+                </button>
+              </div>
+              <div className="text-gray-400 text-xs mt-2 text-right">Tip: Double-click a field to edit. Hover over headers for more info.</div>
             </div>
             {/* Weightage Section */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-blue-200">
@@ -612,7 +590,7 @@ export default function ScheduleRater() {
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700">RMP Rating</label>
+                    <label className="text-lg font-medium text-gray-700 flex items-center">RMP Rating <InfoIcon text="Based on student reviews from RateMyProfessor.com, this score reflects professor quality, clarity, helpfulness, and teaching style." /></label>
                     <div className="flex items-center gap-2">
                       <input
                         type="range"
@@ -640,11 +618,10 @@ export default function ScheduleRater() {
                       />
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">Based on student reviews from RateMyProfessor.com, this score reflects professor quality, clarity, helpfulness, and teaching style.</p>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700">Boiler Grades</label>
+                    <label className="text-lg font-medium text-gray-700 flex items-center">Boiler Grades <InfoIcon text="Reflects the average GPA students have earned in these class over recent semesters." /></label>
                     <div className="flex items-center gap-2">
                       <input
                         type="range"
@@ -672,11 +649,10 @@ export default function ScheduleRater() {
                       />
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">Reflects the average GPA students have earned in these class over recent semesters.</p>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700">Hecticness</label>
+                    <label className="text-lg font-medium text-gray-700 flex items-center">Hecticness <InfoIcon text="Reflects how evenly (or unevenly) your classes are spread out — the more bunched up, the higher the hecticness." /></label>
                     <div className="flex items-center gap-2">
                       <input
                         type="range"
@@ -704,7 +680,6 @@ export default function ScheduleRater() {
                       />
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-2">Reflects how evenly (or unevenly) your classes are spread out — the more bunched up, the higher the hecticness.</p>
                 </div>
               </div>
               <button
@@ -730,7 +705,7 @@ export default function ScheduleRater() {
 
         {/* Score Display */}
         {finalScore !== null && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-cyan-200">
+          <div className="bg-white rounded-2xl shadow-xl p-10 border border-cyan-200 max-w-3xl mx-auto">
             <h2 className="text-2xl font-semibold mb-6 text-cyan-700">Your Schedule Score</h2>
             <div className="text-6xl font-bold text-center text-cyan-500 mb-4">
               {finalScore.toFixed(2)}/10
@@ -747,6 +722,19 @@ export default function ScheduleRater() {
             {analysisOpen && (
               <div id="schedule-analysis-dropdown">
                 <ScheduleScoreDetails data={parsed} />
+                {/* Daily Hecticness Explanation */}
+                <div className="mt-8 p-8 bg-gradient-to-br from-blue-50 via-cyan-50 to-green-50 rounded-2xl border border-blue-200 shadow-lg max-w-3xl mx-auto">
+                  <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /><circle cx="12" cy="12" r="10" /></svg>
+                    Why is each day hectic or easy?
+                  </h3>
+                  <ul className="space-y-3 text-gray-800">
+                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Monday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Wednesday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in LWSN to CS 25000 in WALC, from CS 25000 in WALC to WGSS 28000 in SCHM, and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
+                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Friday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM, from CS 25100 in HAMP to STAT 35500 in WTHR, and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
+                  </ul>
+                  <div className="mt-4 text-gray-600 text-sm flex items-center gap-2"><svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7h2v2h-2v-2zm0-4h2v2h-2V7z" /></svg>Days not listed above are less hectic, with longer breaks and more free time between classes.</div>
+                </div>
               </div>
             )}
           </div>
