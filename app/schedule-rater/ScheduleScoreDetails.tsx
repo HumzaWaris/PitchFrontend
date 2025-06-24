@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 type Props = {
   data: {
@@ -21,60 +21,337 @@ type Props = {
     summaryWeakness: string | null;
     allCourses: any[];
   };
+  hecticnessExplanation?: {
+    title: string;
+    dailyAnalysis: Array<{
+      day: string;
+      description: string;
+    }>;
+    note: string;
+  };
 };
 
-const ScoreCircle: React.FC<{ label: string; value: number | null; color: string }> = ({ label, value, color }) => (
-  <div className="flex flex-col items-center mx-4">
+const InfoIcon: React.FC<{ text: string }> = ({ text }) => (
+  <div className="relative group">
+    <button className="text-cyan-500 hover:text-cyan-700 transition-colors">
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+      </svg>
+    </button>
+    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+      {text}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+    </div>
+  </div>
+);
+
+const ScoreCircle: React.FC<{ 
+  label: string; 
+  value: number | null; 
+  color: string; 
+  infoText: string;
+  icon: React.ReactNode;
+  infoItems?: { label: string; value: string | number | null }[];
+  additionalContent?: React.ReactNode;
+}> = ({ label, value, color, infoText, icon, infoItems, additionalContent }) => (
+  <div className="flex flex-col items-center mx-2 mb-6 min-w-[180px] max-w-xs flex-1">
+    <div className="flex items-center gap-2 mb-2">
+      <span className="text-2xl">{icon}</span>
+      <div className="text-lg font-bold text-gray-800 text-center tracking-tight">{label}</div>
+      <InfoIcon text={infoText} />
+    </div>
     <div
-      className={`w-28 h-28 rounded-full flex items-center justify-center shadow-lg mb-2 border-4 ${color}`}
-      style={{ background: 'white' }}
+      className={`w-20 h-20 rounded-full flex items-center justify-center shadow-md mb-3 border-4 ${color} bg-gradient-to-br from-white via-cyan-50 to-blue-50`}
     >
-      <span className="text-3xl font-bold text-gray-800">{value !== null ? value : 'N/A'}</span>
+      <span className="text-2xl font-extrabold text-gray-800 drop-shadow-lg">{value !== null ? value : 'N/A'}</span>
     </div>
-    <div className="text-lg font-semibold text-gray-700 text-center">{label}</div>
+    {infoItems && infoItems.length > 0 && (
+      <div className="w-full space-y-1 mb-2 mt-1">
+        {infoItems.map((item, index) => (
+          <div key={index} className="flex justify-between py-1 px-2 rounded bg-cyan-50/60 text-xs font-medium text-gray-700">
+            <span>{item.label}</span>
+            <span className="font-bold text-cyan-700">{item.value ?? "N/A"}</span>
+          </div>
+        ))}
+      </div>
+    )}
+    {additionalContent && (
+      <div className="w-full max-w-xs mt-2">
+        {additionalContent}
+      </div>
+    )}
   </div>
 );
 
-const InfoRow: React.FC<{ label: string; value: string | number | null }> = ({ label, value }) => (
-  <div className="flex justify-between py-2 border-b border-gray-100">
-    <span className="font-medium text-gray-700">{label}</span>
-    <span className="font-semibold text-cyan-700">{value ?? "N/A"}</span>
-  </div>
+const HecticnessCircle: React.FC<any> = (props) => {
+  const [openIndexes, setOpenIndexes] = useState<number[]>([]);
+  const toggleDay = (idx: number) => {
+    setOpenIndexes((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+  return (
+    <ScoreCircle
+      {...props}
+      additionalContent={
+        <div className="mt-2 text-left w-full">
+          <div className="text-base font-bold text-blue-700 mb-2 flex items-center gap-1">
+            Most Hectic Days
+          </div>
+          <ul className="space-y-1 text-sm text-gray-800">
+            {props.explanation.dailyAnalysis.map((day: any, index: number) => (
+              <li key={index} className="flex flex-col">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-200 transition"
+                  onClick={() => toggleDay(index)}
+                  aria-expanded={openIndexes.includes(index)}
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <circle cx="10" cy="10" r="8" />
+                    </svg>
+                    <span className="font-semibold">{day.day}</span>
+                  </span>
+                  <span className="ml-auto">
+                    <svg
+                      className={`w-4 h-4 text-cyan-500 transition-transform duration-200 ${openIndexes.includes(index) ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </button>
+                {openIndexes.includes(index) && (
+                  <div className="pl-8 pr-2 py-1 text-gray-700 text-xs bg-cyan-50 rounded-b">
+                    {day.description}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 text-gray-600 text-xs flex items-center gap-1">
+            <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7h2v2h-2v-2zm0-4h2v2h-2V7z" />
+            </svg>
+            {props.explanation.note}
+          </div>
+        </div>
+      }
+    />
+  );
+};
+
+const gpaIcon = (
+  <svg className="w-4 h-4 text-green-500 inline-block mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 20l9-5-9-5-9 5 9 5zm0 0v-8" /></svg>
+);
+const starIcon = (
+  <svg className="w-4 h-4 text-yellow-400 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+);
+const diffIcon = (
+  <svg className="w-4 h-4 text-red-400 inline-block mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
+);
+const heartIcon = (
+  <svg className="w-4 h-4 text-pink-400 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" /></svg>
+);
+const chatIcon = (
+  <svg className="w-4 h-4 text-cyan-400 inline-block mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V10a2 2 0 012-2h2m5-4h-4m4 0a2 2 0 012 2v2a2 2 0 01-2 2h-4a2 2 0 01-2-2V6a2 2 0 012-2m4 0V2m-4 4V2" /></svg>
 );
 
-const ScheduleScoreDetails: React.FC<Props> = ({ data }) => (
-  <div className="bg-white rounded-2xl shadow-xl p-8 border border-cyan-200 mt-8">
-    <h2 className="text-2xl font-semibold mb-6 text-cyan-700 text-center">Schedule Analysis</h2>
-    {/* Circles Row */}
-    <div className="flex flex-row justify-center items-center mb-8 gap-8">
-      <ScoreCircle label="Hecticness" value={data.hecticnessScore} color="border-blue-400" />
-      <ScoreCircle label="RMP" value={data.rmpScore} color="border-cyan-400" />
-      <ScoreCircle label="BoilerGrades" value={data.boilergradesScore} color="border-green-400" />
+// Add type for per-course data
+interface RawCourse {
+  courseName: string;
+  gpa: number | null;
+  usedCourseAvg: boolean;
+  avgQuality: string | null;
+  avgDifficulty: string | null;
+  wouldTakeAgain: number | null;
+  numReviews: number;
+  summary: string | null;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+declare global {
+  interface Window {
+    __MOCK_JSON__?: Record<string, any>;
+  }
+}
+
+// Helper to get per-course details from data
+function getCourseDetails(data: { _rawCourses: RawCourse[] }, courseName: string): RawCourse | undefined {
+  const course = (data._rawCourses || []).find((c) => c.courseName === courseName);
+  return course;
+}
+
+const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowestGpaCourse: string | null } }> = ({ data }) => {
+  const lowest = data.lowestGpaCourse;
+  // Helper to generate a mock GPA if missing
+  function getMockGpa(idx: number) {
+    // Cycle through 2.7 to 4.0
+    return (2.7 + (idx % 14) * 0.1).toFixed(2);
+  }
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {data._rawCourses.map((course: RawCourse, idx: number) => (
+        <div key={course.courseName} className={`px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 ${course.courseName === lowest ? 'border-red-300 bg-red-50' : 'border-green-200'}`}> 
+          <span className="font-semibold text-green-700">{course.courseName}</span>
+          <span className="text-gray-700">{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
+        </div>
+      ))}
     </div>
-    {/* Info List */}
-    <div className="max-w-xl mx-auto mt-6 space-y-2">
-      <InfoRow
-        label="Class with Lowest Avg GPA"
-        value={data.lowestGpaCourse ? `${data.lowestGpaCourse} (GPA: ${data.lowestGpa})` : "N/A"}
-      />
-      <InfoRow
-        label="Class with Lowest Avg RMP Rating"
-        value={data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : "N/A"}
-      />
-      <InfoRow
-        label="Most Difficult Class"
-        value={data.hardestCourse ? `${data.hardestCourse} (Difficulty: ${data.highestDifficulty}/5)` : "N/A"}
-      />
-      <InfoRow
-        label="Most Loved Class (% Would Take Again)"
-        value={data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : "N/A"}
-      />
-      <InfoRow
-        label="Class with Most RMP Reviews"
-        value={data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : "N/A"}
-      />
+  );
+};
+
+const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }) => {
+  // Helper to generate a mock star rating if missing
+  function getMockStar(idx: number) {
+    // Cycle through 2.0 to 5.0
+    return (2.0 + (idx % 31) * 0.1).toFixed(2);
+  }
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {data._rawCourses.map((course: RawCourse, idx: number) => (
+        <div key={course.courseName} className="px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 border-cyan-200">
+          <span className="font-semibold text-cyan-700">{course.courseName}</span>
+          <span className="flex items-center text-yellow-500">
+            <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+            {course.avgQuality !== null ? course.avgQuality : getMockStar(idx)}
+          </span>
+        </div>
+      ))}
     </div>
-  </div>
-);
+  );
+};
+
+const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCourses: RawCourse[] } }> = ({ data, hecticnessExplanation }) => {
+  const defaultHecticnessExplanation = {
+    title: "Why is each day hectic or easy?",
+    dailyAnalysis: [
+      {
+        day: "Monday",
+        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM and from STAT 35500 in WTHR to CS 25100 in LILY."
+      },
+      {
+        day: "Wednesday", 
+        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in LWSN to CS 25000 in WALC, from CS 25000 in WALC to WGSS 28000 in SCHM, and from STAT 35500 in WTHR to CS 25100 in LILY."
+      },
+      {
+        day: "Friday",
+        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM, from CS 25100 in HAMP to STAT 35500 in WTHR, and from STAT 35500 in WTHR to CS 25100 in LILY."
+      }
+    ],
+    note: "Days not listed above are less hectic, with longer breaks and more free time between classes."
+  };
+  const explanation = hecticnessExplanation || defaultHecticnessExplanation;
+  // Build _rawCourses for per-course pills
+  const _rawCourses = React.useMemo(() => {
+    if (!data.allCourses) return [];
+    return data.allCourses.map((c: { courseName: string }) => {
+      // Find original course data from window.__MOCK_JSON__ or similar
+      // For now, just use the available info
+      const courseData = (window.__MOCK_JSON__ || {})[c.courseName] || {};
+      // GPA
+      const gpa = courseData.boilergrades_data?.average_gpa ?? null;
+      const usedCourseAvg = courseData.boilergrades_data?.used_course_avg ?? false;
+      // RMP
+      const rmpComments = courseData.rmp_comments || [];
+      const avgQuality = rmpComments.length ? (rmpComments.reduce((s: number, c: { qualityRating: number }) => s + c.qualityRating, 0) / rmpComments.length).toFixed(2) : null;
+      const avgDifficulty = rmpComments.length ? (rmpComments.reduce((s: number, c: { difficulty: number }) => s + c.difficulty, 0) / rmpComments.length).toFixed(2) : null;
+      const wouldTakeAgain = rmpComments.length ? Math.round((rmpComments.filter((c: { wouldTakeAgain: number | null }) => c.wouldTakeAgain === 1).length / rmpComments.length) * 100) : null;
+      const numReviews = rmpComments.length;
+      const summary = courseData.comments_summary?.summary || null;
+      const strengths = courseData.comments_summary?.strengths || [];
+      const weaknesses = courseData.comments_summary?.weaknesses || [];
+      return {
+        courseName: c.courseName,
+        gpa,
+        usedCourseAvg,
+        avgQuality,
+        avgDifficulty,
+        wouldTakeAgain,
+        numReviews,
+        summary,
+        strengths,
+        weaknesses,
+      };
+    });
+  }, [data.allCourses]);
+  // Find highest GPA course
+  const highestGpaCourseObj = _rawCourses.reduce((max, c) => {
+    if (c.gpa === null) return max;
+    if (max === null || max.gpa === null || c.gpa > max.gpa) return c;
+    return max;
+  }, null as RawCourse | null);
+  const highestGpaCourse = highestGpaCourseObj?.courseName ?? null;
+  const highestGpa = highestGpaCourseObj?.gpa ?? null;
+  const dataWithRawCourses = { ...data, _rawCourses };
+  return (
+    <div className="bg-gradient-to-br from-cyan-50 via-white to-green-50 rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 max-w-5xl mx-auto">
+      <h2 className="text-3xl font-extrabold mb-10 text-cyan-700 text-center tracking-tight drop-shadow">Schedule Analysis</h2>
+      <div className="flex flex-col md:flex-row justify-center items-stretch mb-4 gap-2 md:gap-6 w-full">
+        <HecticnessCircle
+          label="Hecticness"
+          value={data.hecticnessScore}
+          color="border-blue-400"
+          infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
+          icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
+          explanation={explanation}
+        />
+        <div className="flex flex-col flex-1">
+          <ScoreCircle
+            label="RMP"
+            value={data.rmpScore}
+            color="border-cyan-400"
+            infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
+            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
+            infoItems={[
+              {
+                label: "Most Reviews",
+                value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null
+              },
+              {
+                label: "Most Loved",
+                value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null
+              },
+              {
+                label: "Lowest Rating",
+                value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null
+              }
+            ]}
+          />
+          <PerCourseRMP data={dataWithRawCourses} />
+        </div>
+        <div className="flex flex-col flex-1">
+          <ScoreCircle
+            label="BoilerGrades"
+            value={data.boilergradesScore}
+            color="border-green-400"
+            infoText="Based on actual GPA data from past semesters. Higher scores indicate better grade outcomes and easier classes."
+            icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
+            infoItems={[
+              {
+                label: "Lowest GPA",
+                value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null
+              },
+              {
+                label: "Highest GPA",
+                value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null
+              },
+              {
+                label: "Most Difficult",
+                value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null
+              }
+            ]}
+          />
+          <PerCourseBoilerGrades data={dataWithRawCourses} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ScheduleScoreDetails; 

@@ -4,7 +4,355 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import React from "react";
 import ScheduleScoreDetails from "./ScheduleScoreDetails";
-import locations from '../lib/locations.json';
+
+// Location data as a simple array of strings
+const locations = [
+  "W19 - 19 Waldron Street",
+  "2550 - 2550 Northwestern Avenue",
+  "523R - 523 Russell Street",
+  "525R - 525 Russell Street",
+  "541H - 541 Hayes",
+  "844S - 844 South River Road",
+  "POTR - A. A. Potter Engineering Center",
+  "ADM - Agricultural Innovation Center",
+  "AERO - Aerospace Science Lab (Hangar No. 3)",
+  "AAPF - Ag Alumni Seed Phenotyping Facility",
+  "AGAD - Agricultural Administration Building",
+  "ABE - Agricultural and Biological Engineering",
+  "AIDC - Agricultural Information Distr Ctr",
+  "AEV - Airport Emergency Vehicle Building",
+  "ASB - Airport Service Building",
+  "ASB1 - Airport Storage Building No. 1",
+  "ERHT - Amelia Earhart Residence Hall",
+  "RAIL - American Railway Building",
+  "AHF - Animal Holding Facility",
+  "AR - Armory",
+  "HANS - Arthur G. Hansen Life Sciences Res Bldg",
+  "AACC - Asian American and Asian Resource and Cultural Center",
+  "ADPA - Aspire at Discovery Park Bldg A",
+  "ADPB - Aspire at Discovery Park Bldg B",
+  "ADPC - Aspire at Discovery Park Bldg C",
+  "BIDC - Bechtel Innovation Design Center",
+  "BELL - Bell Tower",
+  "HARR - Benjamin Harrison Residence Hall",
+  "HNLY - Bill and Sally Hanley Hall",
+  "BIND - Bindley Bioscience Center",
+  "BCHM - Biochemistry Building",
+  "BRK - Birck Nanotechnology Center",
+  "BCC - Black Cultural Center",
+  "BTV - Boiler Television Building",
+  "AQUA - Boilermaker Aquatic Center",
+  "BLE1 - Bowen Labs Experiment 1",
+  "BLE2 - Bowen Labs Experiment 2",
+  "BLE3 - Bowen Labs Experiment 3",
+  "BLSS - Bowen Labs Storage Shed",
+  "BREQ - Brunner Equine Hospital",
+  "BRFM - Brunner Farm Animal Hospital",
+  "BRUN - Brunner Small Animal Hospital",
+  "MRGN - Burton D. Morgan Ctr for Entrepreneurshp",
+  "BMSN - Byproduct Material Storage Bldg - North",
+  "BMSE - Byproduct Material Storage Building-East",
+  "BMSW - Byproduct Material Storage Building-West",
+  "CAI - Center for Aging Infrastructure Research Equipment Storage",
+  "VCPR - Center for Paralysis Research",
+  "CHAF - Chaffee Hall",
+  "CHAS - Chaney-Hale Hall of Science",
+  "LYNN - Charles J. Lynn Hall of Vet Medicine",
+  "CL50 - Class of 1950 Lecture Hall",
+  "DMNT - Clayton W. Dement Fire Station",
+  "COAL - Coal Handling Control/Fire Pump Bldg",
+  "ZL1 - Combustion Research Laboratory",
+  "COMP - Composites Laboratory",
+  "CONV - Convergence Ctre for Innov & Coll",
+  "CTEB - Cooling Tower Equipment Building",
+  "DAT1 - Data Center 1",
+  "PFEN - David C. Pfendler Hall of Agriculture",
+  "HAMP - Delon and Elizabeth Hampton Hall of Civil Engineering",
+  "SCHW - Dennis J. & Mary Lou Schwartz Tennis Ctr",
+  "DAUC - Dick & Sandy Dauch Alumni Center",
+  "BRES - Drew and Brittany Brees Student-Athlete Academic Center",
+  "DRUG - Drug Discovery",
+  "DUDL - Dudley Hall",
+  "ELLT - Edward C. Elliott Hall of Music",
+  "SHRV - Eleanor B. Shreve Residence Hall",
+  "WOOD - Elizabeth G. & William R. Wood Res Hall",
+  "EEL - Entomology Environmental Lab",
+  "EHSA - Equine Health Sciences Annex",
+  "EHSB - Equine Health Sciences Building",
+  "YONG - Ernest C. Young Hall",
+  "VAWT - Everett B. Vawter Residence Hall",
+  "HAAS - Felix Haas Hall",
+  "FSTC - First Street Towers Central",
+  "FSTE - First Street Towers East",
+  "FSTW - First Street Towers West",
+  "FLEX - Flex Lab",
+  "FOPN - Flight Operations Building",
+  "FPRD - Forest Products Building",
+  "FORS - Forestry Building",
+  "FRNY - Forney Hall of Chemical Engineering",
+  "CREC - France A. Córdova Recreational Sports Center",
+  "SHLY - Frances M. Shealy Residence Hall",
+  "CQE - Franklin Levering Cary Quadrangle (East)",
+  "CQNE - Franklin Levering Cary Quadrangle (NE)",
+  "CQNW - Franklin Levering Cary Quadrangle (NW)",
+  "CQW - Franklin Levering Cary Quadrangle (West)",
+  "CQS - Franklin Levering Cary Quadrangle(South)",
+  "FORD - Fred and Mary Ford Dining Court",
+  "HOVD - Frederick L. Hovde Hall of Admin",
+  "PKRF - Frieda Parker Residence Hall",
+  "ZL6 - Fuel Conditioning Building",
+  "ZL2 - Gas Dynamics Research Laboratory",
+  "GAS - Gas Meter-at Airport",
+  "HAWK - George A. Hawkins Hall",
+  "MANN - Gerald D. and Edna E. Mann Hall",
+  "GCMB - Golf Course Maintenance Barn",
+  "GSMB - Golf Storage Maintenance Barn",
+  "PRIX - Grand Prix Track Restroom Facility",
+  "G333 - Grant 333",
+  "PGG - Grant Street Parking Garage",
+  "GRVL - Gravel Pit Equipment Storage Building",
+  "GRIS - Grissom Hall",
+  "GMF - Grounds Maintenance Facility",
+  "GMGF - Grounds Maintenance Greenhouse Facility",
+  "GMPS - Grounds Maintenance Pesticide Storage Facility",
+  "MACK - Guy J. Mackey Arena",
+  "DLR - Hall for Discovery and Learning Research",
+  "DSAI - Hall of Data Science and AI",
+  "HGR4 - Hangar No. 4",
+  "HGR5 - Hangar No. 5",
+  "HGR6 - Hangar No. 6",
+  "HGR8 - Hangar No. 8",
+  "FWLR - Harriet O. & James M. Fowler Jr. Mem Hse",
+  "PGH - Harrison Street Parking Garage",
+  "WILY - Harvey W. Wiley Residence Hall",
+  "HMMT - Hazardous Materials Management Trailer",
+  "HESB - Heavy Equipment Storage Building",
+  "SCHM - Helen B. Schleman Hall",
+  "JNSN - Helen R. Johnson Hall of Nursing",
+  "BRWN - Herbert C. Brown Laboratory of Chemistry",
+  "HERL - Herrick Acoustics",
+  "HLAB - Herrick Laboratories",
+  "ZL8 - High Pressure Combustion Laboratory",
+  "ZL3 - High Pressure Research Laboratory",
+  "HILL - Hillenbrand Residence Hall",
+  "HA01 - Hilltop Apartment 1",
+  "HA10 - Hilltop Apartment 10",
+  "HA11 - Hilltop Apartment 11",
+  "HA12 - Hilltop Apartment 12",
+  "HA13 - Hilltop Apartment 13",
+  "HA14 - Hilltop Apartment 14",
+  "HA15 - Hilltop Apartment 15",
+  "HA16 - Hilltop Apartment 16",
+  "HA17 - Hilltop Apartment 17",
+  "HA18 - Hilltop Apartment 18",
+  "HA19 - Hilltop Apartment 19",
+  "HA02 - Hilltop Apartment 2",
+  "HA20 - Hilltop Apartment 20",
+  "HA21 - Hilltop Apartment 21",
+  "HA22 - Hilltop Apartment 22",
+  "HA23 - Hilltop Apartment 23",
+  "HA24 - Hilltop Apartment 24",
+  "HA25 - Hilltop Apartment 25",
+  "HA26 - Hilltop Apartment 26",
+  "HA27 - Hilltop Apartment 27",
+  "HA28 - Hilltop Apartment 28",
+  "HA29 - Hilltop Apartment 29",
+  "HA03 - Hilltop Apartment 3",
+  "HA30 - Hilltop Apartment 30",
+  "HA31 - Hilltop Apartment 31",
+  "HA32 - Hilltop Apartment 32",
+  "HA04 - Hilltop Apartment 4",
+  "HA05 - Hilltop Apartment 5",
+  "HA06 - Hilltop Apartment 6",
+  "HA07 - Hilltop Apartment 7",
+  "HA08 - Hilltop Apartment 8",
+  "HA09 - Hilltop Apartment 9",
+  "CRTN - Hobart and Russell Creighton Hall of Animal Sciences",
+  "SIML - Holleman-Niswonger Simulator Center",
+  "HCRN - Honors College and Residences North",
+  "HCRS - Honors College and Residences South",
+  "HGRH - Horticultural Greenhouse",
+  "HORT - Horticulture Building",
+  "HRTP - Horticulture Park Barn",
+  "HULL - Hull All-American Marching Band",
+  "HARF - Hypersonics and Applied Research Facility",
+  "IMI - Indiana Manufacturing Institute - IMI",
+  "INOK - INOK Investments Warehouse",
+  "TURF - Intercollegiate Athletic Sports Turf Bdg",
+  "INSS - Intramural Storage Shed",
+  "RAWL - Jerry S. Rawls Hall",
+  "SMLY - John C. Smalley Ctr For Hsg & Fd Srv Adm",
+  "WRIT - John S. Wright Forestry Center",
+  "MCUT - John T. McCutcheon Residence Hall",
+  "HIKS - John W. Hicks Undergraduate Library",
+  "KPNR - Kepner Building",
+  "KFPC - Kozuch Football Performance Center",
+  "KRCH - Krach Leadership Center",
+  "KRAN - Krannert Building",
+  "KPTC - Kurz Purdue Technology Center",
+  "LMSA - Laboratory Materials Storage Annex",
+  "LMSB - Laboratory Materials Storage Building",
+  "LMST - Laboratory Materials Storage Trailer",
+  "LG - Lambert Green Dining",
+  "LMBS - Lambertus Hall",
+  "LOLC - Land O Lakes Center for Experiential Learning and Purina Pav",
+  "LCCP - Latino Cultural Center at Purdue",
+  "DOYL - Leo Philip Doyle Laboratory",
+  "LSA - Life Science Animal Building",
+  "LSPS - Life Science Plant and Soils Laboratory",
+  "LSR - Life Science Ranges",
+  "LILY - Lilly Hall of Life Sciences",
+  "LINS - Line Shack (at Airport)",
+  "LYLE - Lyles-Porter Hall",
+  "HAGL - Marc and Sharon Hagle Hall",
+  "MRRT - Marriott Hall",
+  "WARN - Martha E. & Eugene K. Warren Resid Hall",
+  "MJIS - Martin C. Jischke Hall of Biomedical Eng",
+  "MSEE - Materials and Electrical Engineering",
+  "MMDC - Materials Management & Distribution Ctr",
+  "MMS1 - Materials Management Storage Building 1",
+  "MMS2 - Materials Management Storage Building 2",
+  "MMS3 - Materials Management Storage Building 3",
+  "MATH - Mathematical Sciences Building",
+  "MTHW - Matthews Hall",
+  "KNOY - Maurice G. Knoy Hall of Technology",
+  "BHEE - Max W & Maileen Brown Family Hall",
+  "PGMD - McCutcheon Drive Parking Garage",
+  "ME - Mechanical Engineering Building",
+  "OLMN - Melvin L. Ollman Golf Cart Barn",
+  "MRDS - Meredith Residence Hall South",
+  "MOLL - Mollenkopf Athletic Center",
+  "NACC - Native American Educational and Cultural Center",
+  "ARMS - Neil Armstrong Hall of Engineering",
+  "TARK - Newton Booth Tarkington Residence Hall",
+  "NISW - Niswonger Aviation Technology Building",
+  "NWSS - Northwest Campus Substation",
+  "NWCP - Northwest Chiller Plant",
+  "NWSB - Northwest Storage Barn",
+  "PGNW - Northwestern Avenue Parking Garage",
+  "TER1 - Oliver Perkins Terry Garage",
+  "TERY - Oliver Perkins Terry House",
+  "DUHM - Ophelia Duhme Residence Hall",
+  "PJEC - Patty Jischke Early Care & Ed Ctr",
+  "PRCE - Peirce Hall",
+  "PEST - Pesticide Applicator Training Facility",
+  "DYE - Pete Dye Clubhouse",
+  "NLSN - Philip E. Nelson Hall of Food Science",
+  "PFSB - Physical Facilities Service Building",
+  "PHYS - Physics Building",
+  "PRSV - Printing Services Facility",
+  "ZL4 - Propulsion Research Laboratory",
+  "PSYC - Psychological Sciences Building",
+  "BBCH - Purdue Baseball Clubhouse",
+  "BBPB - Purdue Baseball Press Box",
+  "BOAT - Purdue Crew Boathouse",
+  "PGSC - Purdue Graduate Student Center",
+  "TRE1 - Purdue Grounds",
+  "PIT1 - Purdue International Teleport Bldg 1",
+  "PMRI - Purdue Magnetic Resonance Imagin",
+  "PMU - Purdue Memorial Union",
+  "PMUC - Purdue Memorial Union Club",
+  "520F - Purdue Musical Organization Warehouse",
+  "SBCH - Purdue Softball Clubhouse",
+  "SBPB - Purdue Softball Press Box",
+  "PSF - Purdue Student Farm",
+  "PTC - Purdue Technology Center",
+  "ECEC - Purdue University Early Care and Education Center",
+  "PUSH - Purdue University Student Health Center",
+  "PVAB - Purdue Village Administration Building",
+  "PWB - Purdue West - Building B",
+  "PWC - Purdue West - Building C",
+  "PWF - Purdue West - Building F",
+  "SOCC - Purdue Womens Soccer Building",
+  "REMS - Radiological & Environ Mgmt Storage Bldg",
+  "BALY - Ralph and Bettye Bailey Hall",
+  "LWSN - Richard & Patricia Lawson Cmptr Sci Bldg",
+  "WTHR - Richard Benbridge Wetherill Lab of Chem",
+  "OWEN - Richard Owen Residence Hall",
+  "RHPH - Robert E. Heine Pharmacy Building",
+  "BOWN - Robert L. & Terry L. Bowen Laboratory",
+  "RAD - Ross-Ade Dining",
+  "STDM - Ross-Ade Stadium",
+  "RALR - Ross-Ade Stadium Locker Room",
+  "WSLR - Roy L. Whistler Hall of Agricultural Rsh",
+  "R414 - Russell 414",
+  "SLT - Salt Storage Building",
+  "VOIN - Samuel Voinoff Golf Pavillion",
+  "SCHO - Schowe House",
+  "SSWA - Self Storage Warehouse A",
+  "SSWB - Self Storage Warehouse B",
+  "SSWC - Self Storage Warehouse C",
+  "WANG - Seng-Liang Wang Hall",
+  "SCPA - Slayter Center of Performing Arts",
+  "SMTH - Smith Hall",
+  "SC - Stanley Coulter Hall",
+  "S410 - Steely 410",
+  "BRNG - Steven C. Beering Hall of Lib Arts & Ed",
+  "STEW - Stewart Center",
+  "SFOF - Swift Fuels Operations Facility",
+  "TH-1 - Tee-Hangar No. 1",
+  "TH-2 - Tee-Hangar No. 2",
+  "TH-3 - Tee-Hangar No. 3",
+  "TH-4 - Tee-Hangar No. 4",
+  "TH-5 - Tee-Hangar No. 5",
+  "TH-6 - Tee-Hangar No. 6",
+  "TH-7 - Tee-Hangar No. 7",
+  "TEL - Telecommunications Building",
+  "TERM - Terminal Building (Hangar No. 2)",
+  "PAGE - Thomas A. Page Pavilion",
+  "WALC - Thomas S. and Harvey D. Wilmeth Active Learning Center",
+  "SPUR - Tom Spurgeon Golf Training Center",
+  "TPB - Track Press Box",
+  "TTS - Track Toilet + Storage Building",
+  "TRAM - Transmitter Building WBAA Radio AM",
+  "TRFM - Transmitter Building WBAA Radio FM",
+  "TSWF - Transportation Service Wash Facility",
+  "TREE - Tree Nursery Service Building",
+  "ZL5 - Turbomachinery Fluid Dynamics Laboratory",
+  "TREC - Turf Recreation Exercise Center",
+  "SAT - Univ Residence Halls Satellite Tran Bldg",
+  "UC - University Church",
+  "UNIV - University Hall",
+  "PGU - University Street Parking Garage",
+  "UPOB - Utility Plant Office Building",
+  "UPOF - Utility Plant Office Facility",
+  "UPSB - Utility Plant Storage Building",
+  "VPRB - Vet. Pathobiology Research Building",
+  "VA1 - Veterinary Animal Isolation Bldg 1",
+  "VA2 - Veterinary Animal Isolation Bldg 2",
+  "VLAB - Veterinary Laboratory Animal Building",
+  "VMIF - Veterinary Medicine Isolation Facility",
+  "VPTH - Veterinary Pathology Building",
+  "MRDH - Virginia C. Meredith Residence Hall",
+  "VULC - Vulcan Building",
+  "WALD - Waldron 125",
+  "WSAN - Waldron Square Apartments North",
+  "WSAS - Waldron Square Apartments South",
+  "WADE - Walter W. Wade Utility Plant",
+  "LAMB - Ward L. Lambert Field House & Gymnasium",
+  "HOCK - Wayne T & Mary T Hockmeyer Hall Strc Bio",
+  "WH-2 - Well House No. 2",
+  "WH-4 - Well House No. 4",
+  "WH-5 - Well House No. 5",
+  "WH-6 - Well House No. 6",
+  "WH-7 - Well House No. 7",
+  "WH-8 - Well House No. 8",
+  "WH-9 - Well House No. 9",
+  "WEST - Westwood",
+  "WWG - Westwood Garage",
+  "WDCT - Wiley Dining Court",
+  "DANL - William H. Daniel Turfgrass Rsch&Diag Ct",
+  "ADDL - Willie M. Reed Animal Disease Diagnostic Laboratory",
+  "PKRW - Winifred Parker Residence Hall",
+  "STON - Winthrop E. Stone Hall",
+  "WGLR - Womens Golf Locker Room",
+  "PGW - Wood Street Parking Garage",
+  "PAO - Yue-Kong Pao Hall of Visual & Perf Arts",
+  "ZS01 - Zucrow Storage Shed 1",
+  "ZS10 - Zucrow Storage Shed 10",
+  "ZS04 - Zucrow Storage Shed 4",
+  "ZS09 - Zucrow Storage Shed 9"
+];
 
 type RmpComment = {
   qualityRating: number;
@@ -238,28 +586,58 @@ type LocationDropdownProps = { value: string; onChange: (val: string) => void; i
 function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDropdownProps) {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const filtered = Object.entries(locations).filter(([code, name]) =>
-    `${code} - ${name}`.toLowerCase().includes(search.toLowerCase())
+  const [highlighted, setHighlighted] = useState<number>(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const filtered = locations.filter((name) =>
+    name.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+    if (open && highlighted >= 0 && highlighted < filtered.length) {
+      const el = document.getElementById(`location-option-${highlighted}`);
+      if (el) el.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlighted, open, filtered.length]);
+
   return (
     <div className="relative w-full">
       <input
+        ref={inputRef}
         className={`w-full border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 text-xs sm:text-sm h-10 ${inputClassName}`}
-        value={search || value}
-        onFocus={() => setOpen(true)}
-        onChange={e => setSearch(e.target.value)}
+        value={open ? search : value}
+        onFocus={() => { setOpen(true); setSearch(value); setHighlighted(-1); }}
+        onChange={e => { setSearch(e.target.value); setOpen(true); setHighlighted(0); }}
+        onBlur={() => setTimeout(() => setOpen(false), 100)}
         placeholder="Search location"
+        onKeyDown={e => {
+          if (!open) return;
+          if (e.key === 'ArrowDown') {
+            setHighlighted(h => Math.min(h + 1, filtered.length - 1));
+          } else if (e.key === 'ArrowUp') {
+            setHighlighted(h => Math.max(h - 1, 0));
+          } else if (e.key === 'Enter' && highlighted >= 0 && highlighted < filtered.length) {
+            onChange(filtered[highlighted]);
+            setSearch(filtered[highlighted]);
+            setOpen(false);
+            inputRef.current?.blur();
+          } else if (e.key === 'Escape') {
+            setOpen(false);
+          }
+        }}
+        autoComplete="off"
       />
       {open && (
-        <div className="absolute z-40 bg-white border border-cyan-200 shadow-xl rounded-lg max-h-40 overflow-y-auto w-full">
+        <div className="absolute z-40 bg-white border border-cyan-200 shadow-xl rounded-lg max-h-48 overflow-y-auto w-full mt-1 animate-fade-in">
           {filtered.length === 0 && <div className="p-2 text-gray-400">No results</div>}
-          {filtered.map(([code, name]) => (
+          {filtered.map((name, idx) => (
             <div
-              key={code}
-              className="px-3 py-2 hover:bg-cyan-50 cursor-pointer text-xs sm:text-sm"
-              onClick={() => { onChange(`${code} - ${name}`); setSearch(''); setOpen(false); }}
+              id={`location-option-${idx}`}
+              key={name}
+              className={`px-3 py-2 cursor-pointer text-xs sm:text-sm transition-colors ${idx === highlighted ? 'bg-cyan-100 text-cyan-900' : 'hover:bg-cyan-50'}`}
+              onMouseDown={() => { onChange(name); setSearch(name); setOpen(false); }}
+              onMouseEnter={() => setHighlighted(idx)}
             >
-              {code} - {name}
+              {name}
             </div>
           ))}
         </div>
@@ -273,12 +651,30 @@ const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 type DaysDropdownProps = { value: string[]; onChange: (days: string[]) => void };
 function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDropdownProps & { dropdownWidthClass?: string }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={ref}>
       <button
         type="button"
-        className="w-full border border-gray-300 rounded-md px-3 py-2 text-left bg-white hover:bg-cyan-50 flex justify-between items-center min-h-[48px] text-base"
-        onClick={() => setOpen(o => !o)}
+        className="w-full border border-gray-300 rounded-md px-3 py-2 text-left bg-white hover:bg-cyan-50 flex justify-between items-center min-h-[48px] text-base shadow-sm transition-all"
+        onMouseDown={e => { e.preventDefault(); setOpen(o => !o); }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
         <span className="flex flex-wrap gap-1 items-center">
           {value.length > 0 ? (
@@ -291,13 +687,21 @@ function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDrop
             <span className="text-gray-400">Days</span>
           )}
         </span>
-        <span className="flex items-center justify-center h-full"><svg className="w-5 h-5 text-cyan-400 align-middle ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></span>
+        <span className="flex items-center justify-center h-full">
+          <svg className="w-5 h-5 text-cyan-400 align-middle ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
       </button>
-      <div className={`absolute left-0 top-10 z-30 bg-white border border-cyan-200 shadow-xl rounded-lg p-2 min-w-[100px] ${dropdownWidthClass} overflow-hidden transition-all duration-200 ${open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`} style={{transformOrigin: 'top'}}>
+      <div
+        className={`absolute left-0 top-10 z-50 bg-white border border-cyan-200 shadow-2xl rounded-xl p-3 min-w-[140px] ${dropdownWidthClass} overflow-hidden transition-all duration-200 ${open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+        style={{ transformOrigin: 'top' }}
+        onMouseDown={e => e.stopPropagation()}
+      >
         {open && (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 animate-fade-in">
             {allDays.map((day: string) => (
-              <label key={day} className="flex items-center py-1 px-2 rounded hover:bg-cyan-50 cursor-pointer">
+              <label key={day} className="flex items-center py-1 px-2 rounded hover:bg-cyan-50 cursor-pointer transition-colors">
                 <input
                   type="checkbox"
                   checked={value.includes(day)}
@@ -535,57 +939,59 @@ export default function ScheduleRater() {
         {/* Schedule Editor Section */}
         {scheduleGenerated && (
           <>
-            <div className="bg-white rounded-2xl shadow-2xl p-8 mb-8 border border-green-200 w-full max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-2xl font-bold text-green-700">Edit Schedule</h2>
-                <span className="text-gray-500 text-sm">Add, edit, or remove your classes below. <span className='hidden sm:inline'>Hover over headers for help.</span></span>
+            <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10 border border-green-200 w-full max-w-7xl mx-auto transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-3xl font-extrabold text-green-700 tracking-tight">Edit Schedule</h2>
+                <span className="text-gray-500 text-base font-medium">Add, edit, or remove your classes below.</span>
               </div>
               {/* Table wrapper for horizontal scroll */}
-              <div className="overflow-x-auto w-full">
-                <div className="min-w-[1200px]">
-                  <div className="grid grid-cols-12 gap-x-4 gap-y-2 items-center w-full text-base mb-2">
-                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2 rounded-tl-lg">Course Subject <span title='e.g. CS, MATH, ENG' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Code <span title='e.g. 101, 201' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Type <span title='e.g. Lecture, Lab' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Days <span title='Select all days this class meets' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1.5 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Start Time <span title='Class start time' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1.5 font-semibold text-center flex justify-center items-center bg-green-50 py-2">End Time <span title='Class end time' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Course Location <span title='e.g. WALC 101' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-2 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Instructor Name <span title='e.g. Dr. Smith' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2">Credits <span title='Number of credits' className='cursor-help text-cyan-500 ml-1'>ℹ️</span></div>
-                    <div className="col-span-1 font-semibold text-center flex justify-center items-center bg-green-50 py-2 rounded-tr-lg"></div>
+              <div className="overflow-x-auto w-full relative">
+                <div className="min-w-[1200px] relative">
+                  <div className="grid grid-cols-12 gap-x-4 items-center w-full text-base mb-2 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100">
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 rounded-tl-2xl text-green-900 text-lg">Course Subject</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Code</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Type</div>
+                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Days</div>
+                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Start Time</div>
+                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">End Time</div>
+                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Location</div>
+                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Instructor Name</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Credits</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 rounded-tr-2xl"></div>
                   </div>
                   {schedule.map((row, idx) => (
-                    <div className={`grid grid-cols-12 gap-x-4 gap-y-2 items-center w-full mb-3 py-3 text-base ${idx % 2 === 1 ? 'bg-gray-50' : ''}`} key={idx}>
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="CS" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="101" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[90px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Lecture" /></div>
+                    <div
+                      className={`grid grid-cols-12 gap-x-4 items-center w-full mb-2 py-3 text-base rounded-xl transition-all duration-150 ${idx % 2 === 1 ? 'bg-gradient-to-r from-green-50 via-cyan-50 to-blue-50' : 'bg-white'} hover:shadow-md hover:scale-[1.01] relative z-0`}
+                      key={idx}
+                    >
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="CS" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="101" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[90px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Lecture" /></div>
                       <div className="col-span-2 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-28" /></div>
-                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold" value={row.courseTime.start} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = e.target.value; setSchedule(newSchedule); }} placeholder="Start" /></div>
-                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold" value={row.courseTime.end} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = e.target.value; setSchedule(newSchedule); }} placeholder="End" /></div>
-                      <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[150px] h-12 px-3 py-2 overflow-x-auto resize-x" /></div>
-                      <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[150px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Dr. Smith" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[60px] h-12 border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 transition" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="3" /></div>
-                      <div className="col-span-1 flex justify-center items-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-lg" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">✕</button></div>
+                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseTime.start} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = e.target.value; setSchedule(newSchedule); }} placeholder="Start" /></div>
+                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseTime.end} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = e.target.value; setSchedule(newSchedule); }} placeholder="End" /></div>
+                      <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[150px] h-12 px-3 py-2 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" /></div>
+                      <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[150px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Dr. Smith" /></div>
+                      <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[60px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="3" /></div>
+                      <div className="col-span-1 flex justify-center items-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-xl transition-all" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">✕</button></div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="flex justify-end mt-2">
+              <div className="flex justify-end mt-4">
                 <button
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 shadow-sm"
+                  className="bg-gradient-to-r from-green-500 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-md hover:from-green-600 hover:to-cyan-600 transform transition-all hover:scale-105 flex items-center gap-2"
                   onClick={() => setSchedule([...schedule, initialScheduleRow])}
                 >
-                  <span className="text-lg">＋</span> Add Class
+                  <span className="text-2xl">＋</span> Add Class
                 </button>
               </div>
-              <div className="text-gray-400 text-xs mt-2 text-right">Tip: Double-click a field to edit. Hover over headers for more info.</div>
+              <div className="text-gray-400 text-sm mt-3 text-right font-medium">Tip: Double-click a field to edit.</div>
             </div>
             {/* Weightage Section */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-blue-200">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-blue-700">Set Weightage</h2>
-                <span className="text-lg font-semibold text-gray-700">Total: {weightage.rmp + weightage.boilerGrades + weightage.hecticness}/100</span>
               </div>
               <div className="space-y-6">
                 <div>
@@ -595,8 +1001,6 @@ export default function ScheduleRater() {
                       <input
                         type="range"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.rmp}
                         onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
                         className="w-80 h-2 bg-cyan-100 rounded-lg appearance-none cursor-pointer accent-cyan-600"
@@ -604,16 +1008,8 @@ export default function ScheduleRater() {
                       <input
                         type="number"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.rmp}
-                        onChange={e => {
-                          let val = Number(e.target.value);
-                          if (isNaN(val)) val = 0;
-                          if (val > 100) val = 100;
-                          if (val < 0) val = 0;
-                          handleWeightageChange('rmp', val);
-                        }}
+                        onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
                         className="w-16 border rounded-md p-1 text-center"
                       />
                     </div>
@@ -626,8 +1022,6 @@ export default function ScheduleRater() {
                       <input
                         type="range"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.boilerGrades}
                         onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
                         className="w-80 h-2 bg-green-100 rounded-lg appearance-none cursor-pointer accent-green-600"
@@ -635,16 +1029,8 @@ export default function ScheduleRater() {
                       <input
                         type="number"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.boilerGrades}
-                        onChange={e => {
-                          let val = Number(e.target.value);
-                          if (isNaN(val)) val = 0;
-                          if (val > 100) val = 100;
-                          if (val < 0) val = 0;
-                          handleWeightageChange('boilerGrades', val);
-                        }}
+                        onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
                         className="w-16 border rounded-md p-1 text-center"
                       />
                     </div>
@@ -657,8 +1043,6 @@ export default function ScheduleRater() {
                       <input
                         type="range"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.hecticness}
                         onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
                         className="w-80 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
@@ -666,16 +1050,8 @@ export default function ScheduleRater() {
                       <input
                         type="number"
                         min="0"
-                        max="100"
-                        step="1"
                         value={weightage.hecticness}
-                        onChange={e => {
-                          let val = Number(e.target.value);
-                          if (isNaN(val)) val = 0;
-                          if (val > 100) val = 100;
-                          if (val < 0) val = 0;
-                          handleWeightageChange('hecticness', val);
-                        }}
+                        onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
                         className="w-16 border rounded-md p-1 text-center"
                       />
                     </div>
@@ -686,19 +1062,11 @@ export default function ScheduleRater() {
                 className="mt-8 w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
                 onClick={() => {
                   const sum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
-                  if (sum !== 100) {
-                    setWeightageError("The sum of all weightages must be exactly 100.");
-                  } else {
-                    setWeightageError(null);
-                    setFinalScore(calculateFinalScore(weightage, parsed));
-                  }
+                  setFinalScore(calculateFinalScore(weightage, parsed));
                 }}
               >
                 Calculate Score
               </button>
-              {weightageError && (
-                <div className="mt-2 text-red-600 text-center font-semibold">{weightageError}</div>
-              )}
             </div>
           </>
         )}
@@ -722,19 +1090,6 @@ export default function ScheduleRater() {
             {analysisOpen && (
               <div id="schedule-analysis-dropdown">
                 <ScheduleScoreDetails data={parsed} />
-                {/* Daily Hecticness Explanation */}
-                <div className="mt-8 p-8 bg-gradient-to-br from-blue-50 via-cyan-50 to-green-50 rounded-2xl border border-blue-200 shadow-lg max-w-3xl mx-auto">
-                  <h3 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /><circle cx="12" cy="12" r="10" /></svg>
-                    Why is each day hectic or easy?
-                  </h3>
-                  <ul className="space-y-3 text-gray-800">
-                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Monday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
-                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Wednesday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in LWSN to CS 25000 in WALC, from CS 25000 in WALC to WGSS 28000 in SCHM, and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
-                    <li className="flex items-start gap-2"><span className="mt-1"><svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V7h2v2z" /></svg></span><span><span className="font-semibold">Friday:</span> Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM, from CS 25100 in HAMP to STAT 35500 in WTHR, and from STAT 35500 in WTHR to CS 25100 in LILY.</span></li>
-                  </ul>
-                  <div className="mt-4 text-gray-600 text-sm flex items-center gap-2"><svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7h2v2h-2v-2zm0-4h2v2h-2V7z" /></svg>Days not listed above are less hectic, with longer breaks and more free time between classes.</div>
-                </div>
               </div>
             )}
           </div>
