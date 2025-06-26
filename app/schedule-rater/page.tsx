@@ -583,15 +583,23 @@ const timeOptions = Array.from({ length: 56 }, (_, i) => {
 });
 
 // Helper for location search
-type LocationDropdownProps = { value: string; onChange: (val: string) => void; inputClassName?: string };
-function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDropdownProps) {
+type LocationDropdownProps = { value: string; onChange: (val: string) => void; inputClassName?: string; open: boolean; setOpen: (open: boolean) => void; inputRef: React.RefObject<HTMLInputElement> };
+function LocationDropdown({ value, onChange, inputClassName = '', open, setOpen, inputRef }: LocationDropdownProps) {
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState<number>(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ left: number; top: number; width: number } | null>(null);
   const filtered = locations.filter((name) =>
     name.toLowerCase().includes(search.toLowerCase())
   );
+
+  useEffect(() => {
+    if (open && inputRef && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPos({ left: rect.left, top: rect.bottom + 6, width: rect.width });
+    } else {
+      setDropdownPos(null);
+    }
+  }, [open, inputRef]);
 
   useEffect(() => {
     if (open && highlighted >= 0 && highlighted < filtered.length) {
@@ -627,8 +635,11 @@ function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDrop
         }}
         autoComplete="off"
       />
-      {open && (
-        <div className="absolute z-40 bg-white border border-cyan-200 shadow-xl rounded-lg max-h-48 overflow-y-auto w-full mt-1 animate-fade-in">
+      {open && dropdownPos && createPortal(
+        <div
+          className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl max-h-48 overflow-y-auto animate-fade-in transition-all duration-200"
+          style={{ position: 'fixed', left: dropdownPos.left, top: dropdownPos.top, width: dropdownPos.width, transformOrigin: 'top' }}
+        >
           {filtered.length === 0 && <div className="p-2 text-gray-400">No results</div>}
           {filtered.map((name, idx) => (
             <div
@@ -641,7 +652,8 @@ function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDrop
               {name}
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -699,8 +711,8 @@ function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32', open: cont
           <span className="text-gray-400">Days</span>
         )}
         </span>
-        <span className="flex items-center justify-center h-full">
-          <svg className="w-5 h-5 text-cyan-400 align-middle ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <span className="flex items-center justify-center h-full ml-2">
+          <svg className={`w-5 h-5 text-cyan-400 align-middle transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </span>
@@ -796,6 +808,8 @@ export default function ScheduleRater() {
   const [openTimePicker, setOpenTimePicker] = useState<{row: number, field: 'start' | 'end'} | null>(null);
   const startBtnRefs = useRef<(HTMLButtonElement | null)[]>([]).current;
   const endBtnRefs = useRef<(HTMLButtonElement | null)[]>([]).current;
+  const [openDropdown, setOpenDropdown] = useState<null | { type: 'days' | 'time' | 'location', row: number, field?: 'start' | 'end' }>(null);
+  const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleWeightageChange = (category: WeightageKey, value: number) => {
     setWeightage(prev => ({
@@ -832,15 +846,52 @@ export default function ScheduleRater() {
         setOpenDaysDropdown(null);
       }
     }
+    function handleScrollOrResize() {
+      setOpenDropdown(null);
+    }
     if (openDaysDropdown !== null) {
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
   }, [openDaysDropdown]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        tableRef.current &&
+        !tableRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    }
+    function handleScrollOrResize() {
+      setOpenDropdown(null);
+    }
+    if (openDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [openDropdown]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0">
@@ -983,10 +1034,10 @@ export default function ScheduleRater() {
                     <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[48px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="Subj" /></div>
                     <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[48px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="Code" /></div>
                     <div className="col-span-1.5 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Type" /></div>
-                    <div className="col-span-1 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-16" open={openDaysDropdown === idx} setOpen={(open: boolean) => setOpenDaysDropdown(open ? idx : null)} /></div>
-                    <div className="col-span-1.5 flex justify-center"><button ref={el => { startBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenTimePicker(openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'start' ? null : {row: idx, field: 'start'})}>{row.courseTime.start || 'Start'}</button>{openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'start' && startBtnRefs[idx] && createPortal((() => { const rect = startBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = time; setSchedule(newSchedule); setOpenTimePicker(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
-                    <div className="col-span-1.5 flex justify-center"><button ref={el => { endBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenTimePicker(openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'end' ? null : {row: idx, field: 'end'})}>{row.courseTime.end || 'End'}</button>{openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'end' && endBtnRefs[idx] && createPortal((() => { const rect = endBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = time; setSchedule(newSchedule); setOpenTimePicker(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
-                    <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[80px] h-10 px-2 py-1 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" /></div>
+                    <div className="col-span-1 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-16" open={!!(openDropdown && openDropdown.type === 'days' && openDropdown.row === idx)} setOpen={(open: boolean) => setOpenDropdown(open ? { type: 'days', row: idx } : null)} /></div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { startBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'start'})}>{row.courseTime.start || 'Start'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'start' && startBtnRefs[idx] && createPortal((() => { const rect = startBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { endBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'end'})}>{row.courseTime.end || 'End'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'end' && endBtnRefs[idx] && createPortal((() => { const rect = endBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
+                    <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[80px] h-10 px-2 py-1 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" open={!!(openDropdown && openDropdown.type === 'location' && openDropdown.row === idx)} setOpen={open => setOpenDropdown(open ? { type: 'location', row: idx } : null)} inputRef={el => { locationInputRefs.current[idx] = el; }} /></div>
                     <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Instr" /></div>
                     <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[32px] h-10 border border-gray-200 rounded-lg px-1 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="Cr" /></div>
                     <div className="col-span-1 flex justify-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-xl transition-all" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">❌</button></div>
