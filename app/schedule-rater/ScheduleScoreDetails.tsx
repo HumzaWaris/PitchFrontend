@@ -53,7 +53,8 @@ const ScoreCircle: React.FC<{
   icon: React.ReactNode;
   infoItems?: { label: string; value: string | number | null }[];
   additionalContent?: React.ReactNode;
-}> = ({ label, value, color, infoText, icon, infoItems, additionalContent }) => (
+  valueDisplay?: string;
+}> = ({ label, value, color, infoText, icon, infoItems, additionalContent, valueDisplay }) => (
   <div className="flex flex-col items-center mx-2 mb-6 min-w-[180px] max-w-xs flex-1">
     <div className="flex items-center gap-2 mb-2">
       <span className="text-2xl">{icon}</span>
@@ -63,7 +64,7 @@ const ScoreCircle: React.FC<{
     <div
       className={`w-20 h-20 rounded-full flex items-center justify-center shadow-md mb-3 border-4 ${color} bg-gradient-to-br from-white via-cyan-50 to-blue-50`}
     >
-      <span className="text-2xl font-extrabold text-gray-800 drop-shadow-lg">{value !== null ? value : 'N/A'}</span>
+      <span className="text-2xl font-extrabold text-gray-800 drop-shadow-lg">{valueDisplay ?? (value !== null ? value : 'N/A')}</span>
     </div>
     {infoItems && infoItems.length > 0 && (
       <div className="w-full space-y-1 mb-2 mt-1">
@@ -227,37 +228,40 @@ const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }
   );
 };
 
-const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCourses: RawCourse[] } }> = ({ data, hecticnessExplanation }) => {
+const percent = (val: number | null) => val !== null ? Math.round(val * 100) : 'N/A';
+
+const BigScoreCircle: React.FC<{ value: number | null }> = ({ value }) => (
+  <div className="flex flex-col items-center justify-center mb-10">
+    <div className="w-40 h-40 rounded-full border-8 border-cyan-400 bg-gradient-to-br from-white via-cyan-50 to-blue-50 flex items-center justify-center shadow-xl mb-4">
+      <span className="text-6xl font-extrabold text-cyan-700 drop-shadow-lg">57%</span>
+    </div>
+    <div className="text-2xl font-bold text-cyan-700 tracking-tight">Huddle Score</div>
+  </div>
+);
+
+const SubScoreCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="flex flex-col flex-1 bg-white rounded-2xl shadow-lg border border-cyan-100 p-8 min-w-[260px] max-w-sm w-full items-center space-y-4">
+    {children}
+  </div>
+);
+
+const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCourses: RawCourse[] }, onlyBigScore?: boolean, onlySubCards?: boolean }> = ({ data, hecticnessExplanation, onlyBigScore, onlySubCards }) => {
   const defaultHecticnessExplanation = {
     title: "Why is each day hectic or easy?",
     dailyAnalysis: [
-      {
-        day: "Monday",
-        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM and from STAT 35500 in WTHR to CS 25100 in LILY."
-      },
-      {
-        day: "Wednesday", 
-        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in LWSN to CS 25000 in WALC, from CS 25000 in WALC to WGSS 28000 in SCHM, and from STAT 35500 in WTHR to CS 25100 in LILY."
-      },
-      {
-        day: "Friday",
-        description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM, from CS 25100 in HAMP to STAT 35500 in WTHR, and from STAT 35500 in WTHR to CS 25100 in LILY."
-      }
+      { day: "Monday", description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM and from STAT 35500 in WTHR to CS 25100 in LILY." },
+      { day: "Wednesday", description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in LWSN to CS 25000 in WALC, from CS 25000 in WALC to WGSS 28000 in SCHM, and from STAT 35500 in WTHR to CS 25100 in LILY." },
+      { day: "Friday", description: "Insufficient free time for lunch (only 40 min free during lunch). Back-to-back classes (gap 10 min) from CS 25000 in WALC to WGSS 28000 in SCHM, from CS 25100 in HAMP to STAT 35500 in WTHR, and from STAT 35500 in WTHR to CS 25100 in LILY." }
     ],
     note: "Days not listed above are less hectic, with longer breaks and more free time between classes."
   };
   const explanation = hecticnessExplanation || defaultHecticnessExplanation;
-  // Build _rawCourses for per-course pills
   const _rawCourses = React.useMemo(() => {
     if (!data.allCourses) return [];
     return data.allCourses.map((c: { courseName: string }) => {
-      // Find original course data from window.__MOCK_JSON__ or similar
-      // For now, just use the available info
       const courseData = (window.__MOCK_JSON__ || {})[c.courseName] || {};
-      // GPA
       const gpa = courseData.boilergrades_data?.average_gpa ?? null;
       const usedCourseAvg = courseData.boilergrades_data?.used_course_avg ?? false;
-      // RMP
       const rmpComments = courseData.rmp_comments || [];
       const avgQuality = rmpComments.length ? (rmpComments.reduce((s: number, c: { qualityRating: number }) => s + c.qualityRating, 0) / rmpComments.length).toFixed(2) : null;
       const avgDifficulty = rmpComments.length ? (rmpComments.reduce((s: number, c: { difficulty: number }) => s + c.difficulty, 0) / rmpComments.length).toFixed(2) : null;
@@ -280,7 +284,6 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
       };
     });
   }, [data.allCourses]);
-  // Find highest GPA course
   const highestGpaCourseObj = _rawCourses.reduce((max, c) => {
     if (c.gpa === null) return max;
     if (max === null || max.gpa === null || c.gpa > max.gpa) return c;
@@ -289,19 +292,25 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
   const highestGpaCourse = highestGpaCourseObj?.courseName ?? null;
   const highestGpa = highestGpaCourseObj?.gpa ?? null;
   const dataWithRawCourses = { ...data, _rawCourses };
-  return (
-    <div className="bg-gradient-to-br from-cyan-50 via-white to-green-50 rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 max-w-5xl mx-auto">
-      <h2 className="text-3xl font-extrabold mb-10 text-cyan-700 text-center tracking-tight drop-shadow">Schedule Analysis</h2>
-      <div className="flex flex-col md:flex-row justify-center items-stretch mb-4 gap-2 md:gap-6 w-full">
-        <HecticnessCircle
-          label="Hecticness"
-          value={data.hecticnessScore}
-          color="border-blue-400"
-          infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
-          icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
-          explanation={explanation}
-        />
-        <div className="flex flex-col flex-1">
+
+  if (onlyBigScore) {
+    return <BigScoreCircle value={data.finalScore} />;
+  }
+  if (onlySubCards) {
+    return (
+      <>
+        <SubScoreCard>
+          <HecticnessCircle
+            label="Hecticness"
+            value={data.hecticnessScore}
+            color="border-blue-400"
+            infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
+            icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
+            explanation={explanation}
+            valueDisplay={percent(data.hecticnessScore) + '%'}
+          />
+        </SubScoreCard>
+        <SubScoreCard>
           <ScoreCircle
             label="RMP"
             value={data.rmpScore}
@@ -309,23 +318,15 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
             icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
             infoItems={[
-              {
-                label: "Most Reviews",
-                value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null
-              },
-              {
-                label: "Most Loved",
-                value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null
-              },
-              {
-                label: "Lowest Rating",
-                value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null
-              }
+              { label: "Most Reviews", value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null },
+              { label: "Most Loved", value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null },
+              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null }
             ]}
+            valueDisplay={percent(data.rmpScore) + '%'}
           />
           <PerCourseRMP data={dataWithRawCourses} />
-        </div>
-        <div className="flex flex-col flex-1">
+        </SubScoreCard>
+        <SubScoreCard>
           <ScoreCircle
             label="BoilerGrades"
             value={data.boilergradesScore}
@@ -333,22 +334,64 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             infoText="Based on actual GPA data from past semesters. Higher scores indicate better grade outcomes and easier classes."
             icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
             infoItems={[
-              {
-                label: "Lowest GPA",
-                value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null
-              },
-              {
-                label: "Highest GPA",
-                value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null
-              },
-              {
-                label: "Most Difficult",
-                value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null
-              }
+              { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
+              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null },
+              { label: "Most Difficult", value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null }
             ]}
+            valueDisplay={percent(data.boilergradesScore) + '%'}
           />
           <PerCourseBoilerGrades data={dataWithRawCourses} />
-        </div>
+        </SubScoreCard>
+      </>
+    );
+  }
+  return (
+    <div className="relative bg-gradient-to-br from-cyan-50 via-white to-green-50 rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 max-w-[98vw] w-full mx-auto flex flex-col items-center">
+      <BigScoreCircle value={data.finalScore} />
+      <div className="flex flex-col md:flex-row justify-center items-stretch gap-x-8 w-full max-w-full">
+        <SubScoreCard>
+          <HecticnessCircle
+            label="Hecticness"
+            value={data.hecticnessScore}
+            color="border-blue-400"
+            infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
+            icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
+            explanation={explanation}
+            valueDisplay={percent(data.hecticnessScore) + '%'}
+          />
+        </SubScoreCard>
+        <SubScoreCard>
+          <ScoreCircle
+            label="RMP"
+            value={data.rmpScore}
+            color="border-cyan-400"
+            infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
+            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
+            infoItems={[
+              { label: "Most Reviews", value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null },
+              { label: "Most Loved", value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null },
+              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null }
+            ]}
+            valueDisplay={percent(data.rmpScore) + '%'}
+          />
+          <PerCourseRMP data={dataWithRawCourses} />
+        </SubScoreCard>
+        <SubScoreCard>
+          <ScoreCircle
+            label="BoilerGrades"
+            value={data.boilergradesScore}
+            color="border-green-400"
+            infoText="Based on actual GPA data from past semesters. Higher scores indicate better grade outcomes and easier classes."
+            icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
+            infoItems={[
+              { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
+              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null },
+              { label: "Most Difficult", value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null }
+            ]}
+            valueDisplay={percent(data.boilergradesScore) + '%'}
+          />
+          <PerCourseBoilerGrades data={dataWithRawCourses} />
+        </SubScoreCard>
       </div>
     </div>
   );

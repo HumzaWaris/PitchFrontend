@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import React from "react";
 import ScheduleScoreDetails from "./ScheduleScoreDetails";
+import { createPortal } from 'react-dom';
 
 // Location data as a simple array of strings
 const locations = [
@@ -648,10 +649,15 @@ function LocationDropdown({ value, onChange, inputClassName = '' }: LocationDrop
 
 // Helper for days multi-select
 const allDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-type DaysDropdownProps = { value: string[]; onChange: (days: string[]) => void };
-function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDropdownProps & { dropdownWidthClass?: string }) {
-  const [open, setOpen] = useState(false);
+type DaysDropdownProps = { value: string[]; onChange: (days: string[]) => void; open?: boolean; setOpen?: (open: boolean) => void };
+function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32', open: controlledOpen, setOpen: setControlledOpen }: DaysDropdownProps & { dropdownWidthClass?: string }) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setOpen = setControlledOpen || setUncontrolledOpen;
   const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{left: number, top: number, width: number} | null>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
@@ -660,32 +666,38 @@ function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDrop
     }
     if (open) {
       document.addEventListener('mousedown', handleClickOutside);
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPos({ left: rect.left, top: rect.bottom + 6, width: rect.width });
+      }
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
+      setDropdownPos(null);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [open]);
+  }, [open, setOpen]);
   return (
     <div className="relative w-full" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
         className="w-full border border-gray-300 rounded-md px-3 py-2 text-left bg-white hover:bg-cyan-50 flex justify-between items-center min-h-[48px] text-base shadow-sm transition-all"
-        onMouseDown={e => { e.preventDefault(); setOpen(o => !o); }}
+        onMouseDown={e => { e.preventDefault(); setOpen(!open); }}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span className="flex flex-wrap gap-1 items-center">
-          {value.length > 0 ? (
-            value.map((day: string) => (
+        {value.length > 0 ? (
+          value.map((day: string) => (
               <span key={day} className="inline-flex items-center px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold border border-cyan-300 align-middle">
-                {dayAbbr[day]}
-              </span>
-            ))
-          ) : (
-            <span className="text-gray-400">Days</span>
-          )}
+              {dayAbbr[day]}
+            </span>
+          ))
+        ) : (
+          <span className="text-gray-400">Days</span>
+        )}
         </span>
         <span className="flex items-center justify-center h-full">
           <svg className="w-5 h-5 text-cyan-400 align-middle ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -693,13 +705,13 @@ function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDrop
           </svg>
         </span>
       </button>
-      <div
-        className={`absolute left-0 top-10 z-50 bg-white border border-cyan-200 shadow-2xl rounded-xl p-3 min-w-[140px] ${dropdownWidthClass} overflow-hidden transition-all duration-200 ${open ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
-        style={{ transformOrigin: 'top' }}
-        onMouseDown={e => e.stopPropagation()}
-      >
-        {open && (
-          <div className="flex flex-col gap-1 animate-fade-in">
+      {open && dropdownPos && createPortal(
+        <div
+          className={`z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-3 min-w-[140px] ${dropdownWidthClass} overflow-hidden transition-all duration-200 animate-fade-in`}
+          style={{ position: 'fixed', left: dropdownPos.left, top: dropdownPos.top, width: dropdownPos.width, transformOrigin: 'top' }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <div className="flex flex-col gap-1">
             {allDays.map((day: string) => (
               <label key={day} className="flex items-center py-1 px-2 rounded hover:bg-cyan-50 cursor-pointer transition-colors">
                 <input
@@ -718,8 +730,9 @@ function DaysDropdown({ value, onChange, dropdownWidthClass = 'w-32' }: DaysDrop
               </label>
             ))}
           </div>
-        )}
-      </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -780,6 +793,9 @@ export default function ScheduleRater() {
   const [openDaysDropdown, setOpenDaysDropdown] = useState<number | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [openInfo, setOpenInfo] = useState<null | 'rmp' | 'boilerGrades' | 'hecticness'>(null);
+  const [openTimePicker, setOpenTimePicker] = useState<{row: number, field: 'start' | 'end'} | null>(null);
+  const startBtnRefs = useRef<(HTMLButtonElement | null)[]>([]).current;
+  const endBtnRefs = useRef<(HTMLButtonElement | null)[]>([]).current;
 
   const handleWeightageChange = (category: WeightageKey, value: number) => {
     setWeightage(prev => ({
@@ -939,44 +955,44 @@ export default function ScheduleRater() {
         {/* Schedule Editor Section */}
         {scheduleGenerated && (
           <>
-            <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10 border border-green-200 w-full max-w-7xl mx-auto transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10 border border-green-200 w-full max-w-[1400px] min-w-[900px] mx-auto transition-all flex flex-col items-center justify-center">
+              <div className="flex items-center justify-between mb-4 w-full">
                 <h2 className="text-3xl font-extrabold text-green-700 tracking-tight">Edit Schedule</h2>
                 <span className="text-gray-500 text-base font-medium">Add, edit, or remove your classes below.</span>
               </div>
-              {/* Table wrapper for horizontal scroll */}
-              <div className="overflow-x-auto w-full relative">
-                <div className="min-w-[1200px] relative">
-                  <div className="grid grid-cols-12 gap-x-4 items-center w-full text-base mb-2 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100">
-                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 rounded-tl-2xl text-green-900 text-lg">Course Subject</div>
-                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Code</div>
-                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Type</div>
-                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Days</div>
-                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Start Time</div>
-                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">End Time</div>
-                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Course Location</div>
-                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Instructor Name</div>
-                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 text-green-900 text-lg">Credits</div>
-                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-3 rounded-tr-2xl"></div>
+              {/* Table wrapper with minimal spacing, centered */}
+              <div className="w-full relative flex flex-col items-center justify-center">
+                <div className="relative w-full">
+                  <div className="grid grid-cols-12 gap-x-2 items-center w-full text-sm mb-2 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100 px-2">
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-2 rounded-tl-2xl text-green-900">Subj</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-2 text-green-900">Code</div>
+                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-2 text-green-900">Type</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-2 text-green-900">Days</div>
+                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-2 text-green-900">Start</div>
+                    <div className="col-span-1.5 font-bold text-center flex justify-center items-center py-2 text-green-900">End</div>
+                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-2 text-green-900">Loc</div>
+                    <div className="col-span-2 font-bold text-center flex justify-center items-center py-2 text-green-900">Instr</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-2 text-green-900">Cr</div>
+                    <div className="col-span-1 font-bold text-center flex justify-center items-center py-2 rounded-tr-2xl text-green-900">❌</div>
                   </div>
-                  {schedule.map((row, idx) => (
-                    <div
-                      className={`grid grid-cols-12 gap-x-4 items-center w-full mb-2 py-3 text-base rounded-xl transition-all duration-150 ${idx % 2 === 1 ? 'bg-gradient-to-r from-green-50 via-cyan-50 to-blue-50' : 'bg-white'} hover:shadow-md hover:scale-[1.01] relative z-0`}
-                      key={idx}
-                    >
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="CS" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[70px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="101" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[90px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Lecture" /></div>
-                      <div className="col-span-2 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-28" /></div>
-                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseTime.start} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = e.target.value; setSchedule(newSchedule); }} placeholder="Start" /></div>
-                      <div className="col-span-1.5 flex justify-center"><input type="time" className="w-full min-w-[100px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseTime.end} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = e.target.value; setSchedule(newSchedule); }} placeholder="End" /></div>
-                      <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[150px] h-12 px-3 py-2 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" /></div>
-                      <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[150px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Dr. Smith" /></div>
-                      <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[60px] h-12 border border-gray-200 rounded-lg px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="3" /></div>
-                      <div className="col-span-1 flex justify-center items-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-xl transition-all" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">✕</button></div>
-                    </div>
-                  ))}
-                </div>
+                {schedule.map((row, idx) => (
+                  <div
+                    className={`grid grid-cols-12 gap-x-2 w-full mb-2 py-2 text-sm rounded-xl transition-all duration-150 px-2 ${idx % 2 === 1 ? 'bg-gradient-to-r from-green-50 via-cyan-50 to-blue-50' : 'bg-white'} hover:shadow-md hover:scale-[1.01] relative z-0 items-center`}
+                    key={idx}
+                  >
+                    <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[48px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseSubject} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseSubject = e.target.value; setSchedule(newSchedule); }} placeholder="Subj" /></div>
+                    <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[48px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="Code" /></div>
+                    <div className="col-span-1.5 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Type" /></div>
+                    <div className="col-span-1 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-16" open={openDaysDropdown === idx} setOpen={(open: boolean) => setOpenDaysDropdown(open ? idx : null)} /></div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { startBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenTimePicker(openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'start' ? null : {row: idx, field: 'start'})}>{row.courseTime.start || 'Start'}</button>{openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'start' && startBtnRefs[idx] && createPortal((() => { const rect = startBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = time; setSchedule(newSchedule); setOpenTimePicker(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { endBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenTimePicker(openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'end' ? null : {row: idx, field: 'end'})}>{row.courseTime.end || 'End'}</button>{openTimePicker && openTimePicker.row === idx && openTimePicker.field === 'end' && endBtnRefs[idx] && createPortal((() => { const rect = endBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = time; setSchedule(newSchedule); setOpenTimePicker(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
+                    <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[80px] h-10 px-2 py-1 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" /></div>
+                    <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Instr" /></div>
+                    <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[32px] h-10 border border-gray-200 rounded-lg px-1 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="Cr" /></div>
+                    <div className="col-span-1 flex justify-center"><button className="text-red-500 hover:text-red-700 font-bold px-2 text-xl transition-all" onClick={() => { setSchedule(schedule.filter((_, i) => i !== idx)); }} aria-label="Delete row">❌</button></div>
+                  </div>
+                ))}
+              </div>
               </div>
               <div className="flex justify-end mt-4">
                 <button
@@ -990,14 +1006,17 @@ export default function ScheduleRater() {
             </div>
             {/* Weightage Section */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-blue-200">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col mb-6">
                 <h2 className="text-2xl font-semibold text-blue-700">Set Weightage</h2>
+                <p className="text-gray-600 text-base mt-2 max-w-2xl">
+                  Adjust the sliders to set how much each factor (professor ratings, grade outcomes, and schedule hecticness) matters to you. Your final schedule score will reflect your personal priorities, helping you find the best fit for your needs.
+                </p>
               </div>
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2 items-center">
                     <label className="text-lg font-medium text-gray-700 flex items-center">RMP Rating <InfoIcon text="Based on student reviews from RateMyProfessor.com, this score reflects professor quality, clarity, helpfulness, and teaching style." /></label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                       <input
                         type="range"
                         min="0"
@@ -1005,20 +1024,14 @@ export default function ScheduleRater() {
                         onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
                         className="w-80 h-2 bg-cyan-100 rounded-lg appearance-none cursor-pointer accent-cyan-600"
                       />
-                      <input
-                        type="number"
-                        min="0"
-                        value={weightage.rmp}
-                        onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
-                        className="w-16 border rounded-md p-1 text-center"
-                      />
+                      <span className="w-10 text-center text-lg font-semibold text-cyan-700">{weightage.rmp}</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2 items-center">
                     <label className="text-lg font-medium text-gray-700 flex items-center">Boiler Grades <InfoIcon text="Reflects the average GPA students have earned in these class over recent semesters." /></label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                       <input
                         type="range"
                         min="0"
@@ -1026,20 +1039,14 @@ export default function ScheduleRater() {
                         onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
                         className="w-80 h-2 bg-green-100 rounded-lg appearance-none cursor-pointer accent-green-600"
                       />
-                      <input
-                        type="number"
-                        min="0"
-                        value={weightage.boilerGrades}
-                        onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
-                        className="w-16 border rounded-md p-1 text-center"
-                      />
+                      <span className="w-10 text-center text-lg font-semibold text-green-700">{weightage.boilerGrades}</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between mb-2 items-center">
                     <label className="text-lg font-medium text-gray-700 flex items-center">Hecticness <InfoIcon text="Reflects how evenly (or unevenly) your classes are spread out — the more bunched up, the higher the hecticness." /></label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
                       <input
                         type="range"
                         min="0"
@@ -1047,13 +1054,7 @@ export default function ScheduleRater() {
                         onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
                         className="w-80 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
-                      <input
-                        type="number"
-                        min="0"
-                        value={weightage.hecticness}
-                        onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
-                        className="w-16 border rounded-md p-1 text-center"
-                      />
+                      <span className="w-10 text-center text-lg font-semibold text-blue-700">{weightage.hecticness}</span>
                     </div>
                   </div>
                 </div>
@@ -1062,7 +1063,7 @@ export default function ScheduleRater() {
                 className="mt-8 w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
                 onClick={() => {
                   const sum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
-                  setFinalScore(calculateFinalScore(weightage, parsed));
+                    setFinalScore(calculateFinalScore(weightage, parsed));
                 }}
               >
                 Calculate Score
@@ -1073,13 +1074,45 @@ export default function ScheduleRater() {
 
         {/* Score Display */}
         {finalScore !== null && (
-          <div className="bg-white rounded-2xl shadow-xl p-10 border border-cyan-200 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-semibold mb-6 text-cyan-700">Your Schedule Score</h2>
-            <div className="text-6xl font-bold text-center text-cyan-500 mb-4">
-              {finalScore.toFixed(2)}/10
+          <div className="relative bg-white rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 max-w-[110vw] w-full mx-auto flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-700">Your Schedule Score</h2>
+            {/* Huddle Score Circle replaces the numeric score */}
+            <div className="mb-2 flex justify-center">
+              {(() => {
+                const allCourses = parsed.allCourses || [];
+                const _rawCourses = allCourses.map((c: { courseName: string }) => {
+                  const courseData = (typeof window !== 'undefined' && window.__MOCK_JSON__ ? window.__MOCK_JSON__ : {})[c.courseName] || {};
+                  const gpa = courseData.boilergrades_data?.average_gpa ?? null;
+                  const usedCourseAvg = courseData.boilergrades_data?.used_course_avg ?? false;
+                  const rmpComments = courseData.rmp_comments || [];
+                  const avgQuality = rmpComments.length ? (rmpComments.reduce((s: number, c: { qualityRating: number }) => s + c.qualityRating, 0) / rmpComments.length).toFixed(2) : null;
+                  const avgDifficulty = rmpComments.length ? (rmpComments.reduce((s: number, c: { difficulty: number }) => s + c.difficulty, 0) / rmpComments.length).toFixed(2) : null;
+                  const wouldTakeAgain = rmpComments.length ? Math.round((rmpComments.filter((c: { wouldTakeAgain: number | null }) => c.wouldTakeAgain === 1).length / rmpComments.length) * 100) : null;
+                  const numReviews = rmpComments.length;
+                  const summary = courseData.comments_summary?.summary || null;
+                  const strengths = courseData.comments_summary?.strengths || [];
+                  const weaknesses = courseData.comments_summary?.weaknesses || [];
+                  return {
+                    courseName: c.courseName,
+                    gpa,
+                    usedCourseAvg,
+                    avgQuality,
+                    avgDifficulty,
+                    wouldTakeAgain,
+                    numReviews,
+                    summary,
+                    strengths,
+                    weaknesses,
+                  };
+                });
+                const dataWithRawCourses = { ...parsed, _rawCourses };
+                // Only render the BigScoreCircle from ScheduleScoreDetails
+                // @ts-ignore
+                return <div className="scale-110"><ScheduleScoreDetails data={dataWithRawCourses} onlyBigScore /></div>;
+              })()}
             </div>
             <button
-              className="flex items-center mx-auto px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg font-semibold hover:bg-cyan-200 transition mb-2"
+              className="flex items-center mx-auto px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg font-semibold hover:bg-cyan-200 transition mb-2 mt-2"
               onClick={() => setAnalysisOpen((open) => !open)}
               aria-expanded={analysisOpen}
               aria-controls="schedule-analysis-dropdown"
@@ -1088,8 +1121,42 @@ export default function ScheduleRater() {
               <span className="ml-2">{analysisOpen ? '▲' : '▼'}</span>
             </button>
             {analysisOpen && (
-              <div id="schedule-analysis-dropdown">
-                <ScheduleScoreDetails data={parsed} />
+              <div className="relative w-full flex flex-col items-center mt-4">
+                {/* Sub-category Cards Row */}
+                <div className="flex flex-col md:flex-row justify-center items-stretch gap-x-8 w-full max-w-[105vw] mx-auto">
+                  {(() => {
+                    const allCourses = parsed.allCourses || [];
+                    const _rawCourses = allCourses.map((c: { courseName: string }) => {
+                      const courseData = (typeof window !== 'undefined' && window.__MOCK_JSON__ ? window.__MOCK_JSON__ : {})[c.courseName] || {};
+                      const gpa = courseData.boilergrades_data?.average_gpa ?? null;
+                      const usedCourseAvg = courseData.boilergrades_data?.used_course_avg ?? false;
+                      const rmpComments = courseData.rmp_comments || [];
+                      const avgQuality = rmpComments.length ? (rmpComments.reduce((s: number, c: { qualityRating: number }) => s + c.qualityRating, 0) / rmpComments.length).toFixed(2) : null;
+                      const avgDifficulty = rmpComments.length ? (rmpComments.reduce((s: number, c: { difficulty: number }) => s + c.difficulty, 0) / rmpComments.length).toFixed(2) : null;
+                      const wouldTakeAgain = rmpComments.length ? Math.round((rmpComments.filter((c: { wouldTakeAgain: number | null }) => c.wouldTakeAgain === 1).length / rmpComments.length) * 100) : null;
+                      const numReviews = rmpComments.length;
+                      const summary = courseData.comments_summary?.summary || null;
+                      const strengths = courseData.comments_summary?.strengths || [];
+                      const weaknesses = courseData.comments_summary?.weaknesses || [];
+                      return {
+                        courseName: c.courseName,
+                        gpa,
+                        usedCourseAvg,
+                        avgQuality,
+                        avgDifficulty,
+                        wouldTakeAgain,
+                        numReviews,
+                        summary,
+                        strengths,
+                        weaknesses,
+                      };
+                    });
+                    const dataWithRawCourses = { ...parsed, _rawCourses };
+                    // Render only the sub-cards from ScheduleScoreDetails
+                    // @ts-ignore
+                    return <ScheduleScoreDetails data={dataWithRawCourses} onlySubCards />;
+                  })()}
+                </div>
               </div>
             )}
           </div>
