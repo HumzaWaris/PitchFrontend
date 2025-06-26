@@ -810,6 +810,7 @@ export default function ScheduleRater() {
   const endBtnRefs = useRef<(HTMLButtonElement | null)[]>([]).current;
   const [openDropdown, setOpenDropdown] = useState<null | { type: 'days' | 'time' | 'location', row: number, field?: 'start' | 'end' }>(null);
   const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [isTimeDropdownHovered, setIsTimeDropdownHovered] = useState(false);
 
   const handleWeightageChange = (category: WeightageKey, value: number) => {
     setWeightage(prev => ({
@@ -847,7 +848,10 @@ export default function ScheduleRater() {
       }
     }
     function handleScrollOrResize() {
-      setOpenDropdown(null);
+      // Only close time dropdown if not hovered
+      if (!(openDropdown && openDropdown.type === 'time' && isTimeDropdownHovered)) {
+        setOpenDropdown(null);
+      }
     }
     if (openDaysDropdown !== null) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -863,7 +867,7 @@ export default function ScheduleRater() {
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [openDaysDropdown]);
+  }, [openDaysDropdown, isTimeDropdownHovered]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -875,7 +879,10 @@ export default function ScheduleRater() {
       }
     }
     function handleScrollOrResize() {
-      setOpenDropdown(null);
+      // Only close time dropdown if not hovered
+      if (!(openDropdown && openDropdown.type === 'time' && isTimeDropdownHovered)) {
+        setOpenDropdown(null);
+      }
     }
     if (openDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -891,7 +898,7 @@ export default function ScheduleRater() {
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
     };
-  }, [openDropdown]);
+  }, [openDropdown, isTimeDropdownHovered]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0">
@@ -1035,8 +1042,28 @@ export default function ScheduleRater() {
                     <div className="col-span-1 flex justify-center"><input type="text" className="w-full min-w-[48px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseCode} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseCode = e.target.value; setSchedule(newSchedule); }} placeholder="Code" /></div>
                     <div className="col-span-1.5 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.courseType} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].courseType = e.target.value; setSchedule(newSchedule); }} placeholder="Type" /></div>
                     <div className="col-span-1 flex justify-center"><DaysDropdown value={row.courseDays} onChange={(days: string[]) => { const newSchedule = [...schedule]; newSchedule[idx].courseDays = days; setSchedule(newSchedule); }} dropdownWidthClass="w-16" open={!!(openDropdown && openDropdown.type === 'days' && openDropdown.row === idx)} setOpen={(open: boolean) => setOpenDropdown(open ? { type: 'days', row: idx } : null)} /></div>
-                    <div className="col-span-1.5 flex justify-center"><button ref={el => { startBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'start'})}>{row.courseTime.start || 'Start'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'start' && startBtnRefs[idx] && createPortal((() => { const rect = startBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
-                    <div className="col-span-1.5 flex justify-center"><button ref={el => { endBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'end'})}>{row.courseTime.end || 'End'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'end' && endBtnRefs[idx] && createPortal((() => { const rect = endBtnRefs[idx].getBoundingClientRect(); return (<div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}>{timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}</div>); })(), document.body)}</div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { startBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'start'})}>{row.courseTime.start || 'Start'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'start' && startBtnRefs[idx] && createPortal((() => {
+                      const rect = startBtnRefs[idx].getBoundingClientRect();
+                      return (
+                        <div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}
+                          onMouseEnter={() => setIsTimeDropdownHovered(true)}
+                          onMouseLeave={() => setIsTimeDropdownHovered(false)}
+                        >
+                          {timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.start = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}
+                        </div>
+                      );
+                    })(), document.body)}</div>
+                    <div className="col-span-1.5 flex justify-center"><button ref={el => { endBtnRefs[idx] = el; }} type="button" className="w-full min-w-[70px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-400 font-semibold transition-all text-base" onClick={() => setOpenDropdown(openDropdown && openDropdown.type === 'time' && openDropdown.row === idx ? null : { type: 'time', row: idx, field: 'end'})}>{row.courseTime.end || 'End'}</button>{openDropdown && openDropdown.type === 'time' && openDropdown.row === idx && openDropdown.field === 'end' && endBtnRefs[idx] && createPortal((() => {
+                      const rect = endBtnRefs[idx].getBoundingClientRect();
+                      return (
+                        <div className="z-[9999] bg-white border border-cyan-200 shadow-2xl rounded-xl p-2 min-w-[100px] max-h-60 overflow-y-auto animate-fade-in transition-all duration-200" style={{ position: 'fixed', left: rect.left, top: rect.bottom + 6, width: rect.width, transformOrigin: 'top' }}
+                          onMouseEnter={() => setIsTimeDropdownHovered(true)}
+                          onMouseLeave={() => setIsTimeDropdownHovered(false)}
+                        >
+                          {timeOptions.map((time) => (<div key={time} className="px-3 py-2 cursor-pointer hover:bg-cyan-50 text-sm text-gray-700" onClick={() => { const newSchedule = [...schedule]; newSchedule[idx].courseTime.end = time; setSchedule(newSchedule); setOpenDropdown(null); }}>{time}</div>))}
+                        </div>
+                      );
+                    })(), document.body)}</div>
                     <div className="col-span-2 flex justify-center"><LocationDropdown value={row.courseLocation} onChange={(loc: string) => { const newSchedule = [...schedule]; newSchedule[idx].courseLocation = loc; setSchedule(newSchedule); }} inputClassName="w-full min-w-[80px] h-10 px-2 py-1 overflow-x-auto resize-x border border-gray-200 rounded-lg transition-all" open={!!(openDropdown && openDropdown.type === 'location' && openDropdown.row === idx)} setOpen={open => setOpenDropdown(open ? { type: 'location', row: idx } : null)} inputRef={el => { locationInputRefs.current[idx] = el; }} /></div>
                     <div className="col-span-2 flex justify-center"><input type="text" className="w-full min-w-[60px] h-10 border border-gray-200 rounded-lg px-2 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.instructorName} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].instructorName = e.target.value; setSchedule(newSchedule); }} placeholder="Instr" /></div>
                     <div className="col-span-1 flex justify-center"><input type="number" min="0" className="w-full min-w-[32px] h-10 border border-gray-200 rounded-lg px-1 py-1 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 font-semibold transition-all" value={row.credits} onChange={e => { const newSchedule = [...schedule]; newSchedule[idx].credits = e.target.value.replace(/[^0-9]/g, ''); setSchedule(newSchedule); }} placeholder="Cr" /></div>
