@@ -1,0 +1,47 @@
+import React, { useState, useRef } from 'react';
+
+const options = Array.from({ length: 50 }, (_, i) => `Option ${i + 1}`);
+
+export default function SimpleDropdownTest() {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="relative w-64 mx-auto mt-10">
+      <input
+        ref={inputRef}
+        className="w-full border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 text-sm h-10"
+        value={selected}
+        onFocus={() => setOpen(true)}
+        onChange={e => setSelected(e.target.value)}
+        placeholder="Select option"
+        readOnly
+      />
+      {open && (
+        <div
+          className="z-50 bg-white border border-cyan-200 shadow-2xl rounded-xl max-h-48 overflow-y-auto absolute left-0 top-full w-full mt-1"
+          onMouseDown={e => e.stopPropagation()}
+          onPointerDown={e => e.stopPropagation()}
+        >
+          {options.map(option => (
+            <div
+              key={option}
+              className="px-3 py-2 cursor-pointer text-sm hover:bg-cyan-50"
+              onMouseDown={() => { setSelected(option); setOpen(false); }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+      {open && (
+        <div
+          className="fixed inset-0 z-40"
+          onMouseDown={() => setOpen(false)}
+          onPointerDown={() => setOpen(false)}
+        />
+      )}
+    </div>
+  );
+} 
