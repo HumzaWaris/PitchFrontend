@@ -553,6 +553,12 @@ export default function ScheduleRater() {
   const locationInputRefs: React.MutableRefObject<React.RefObject<HTMLInputElement>[]> = useRef([]);
   const [isTimeDropdownHovered, setIsTimeDropdownHovered] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [advancedOptions, setAdvancedOptions] = useState({
+    breakfast: { start: '', end: '' },
+    lunch: { start: '', end: '' },
+    dinner: { start: '', end: '' },
+    freeTime: { start: '', end: '' },
+  });
   useEffect(() => { setIsClient(true); }, []);
 
   const handleWeightageChange = (category: WeightageKey, value: number) => {
@@ -636,10 +642,8 @@ export default function ScheduleRater() {
       {/* Huddle Logo and nav */}
       <div className="flex items-center justify-between px-8 pt-8 pb-2">
         <div className="flex items-center space-x-3">
-          <Image src="/images/Huddle_Social_Icon_Transparent_Background.png" alt="Huddle Logo" width={48} height={48} />
-          <span className="text-2xl font-bold text-gray-800 tracking-tight">Huddle</span>
+          <Image src="/images/huddle_logo.png" alt="Huddle Logo" width={220} height={80} />
         </div>
-        {/* Placeholder for nav links if needed */}
       </div>
 
       <div className="max-w-4xl mx-auto mt-4">
@@ -919,6 +923,92 @@ export default function ScheduleRater() {
                 </button>
               </div>
               <div className="text-gray-400 text-sm mt-3 text-right font-medium">Tip: Double-click a field to edit.</div>
+              {/* Explanatory note about the checkbox */}
+              <div className="w-full flex items-center justify-start mt-2 mb-2">
+                <div className="bg-cyan-50 border border-cyan-200 rounded-lg px-4 py-2 text-cyan-800 text-sm flex items-center gap-2">
+                  <svg className="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="4" fill="#ECFEFF" stroke="#06b6d4" strokeWidth="2"/>
+                    <path d="M7 12l3 3 7-7" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span>
+                    <b>Checkbox:</b> Tick this if you <b>actually plan to attend</b> this class. Only checked classes will be factored into your Huddle score!
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-cyan-200 w-full max-w-[1000px] min-w-[700px] mx-auto transition-all flex flex-col items-center justify-center px-2">
+              <h2 className="text-2xl font-semibold text-cyan-700 mb-2">Advanced Options</h2>
+              <div className="w-full mb-6">
+                <div className="flex items-start gap-3 bg-cyan-50 border border-cyan-100 rounded-lg px-4 py-3 text-cyan-800 text-base">
+                  <svg className="w-6 h-6 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
+                  <span>
+                    <b>Set your preferred times for meals and free time.</b> <br/>
+                    We'll use these to help you spot schedule conflicts and optimize your day! This makes your Huddle experience more personalized and helps you balance academics with breaks and self-care.
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                {/* Breakfast */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium text-cyan-800">🍳 Breakfast</label>
+                  <div className="flex gap-2 items-center">
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.breakfast.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, start: e.target.value } }))}>
+                      <option value="">Start</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-cyan-400 font-bold">–</span>
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.breakfast.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, end: e.target.value } }))}>
+                      <option value="">End</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Lunch */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium text-cyan-800">🥪 Lunch</label>
+                  <div className="flex gap-2 items-center">
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.lunch.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, start: e.target.value } }))}>
+                      <option value="">Start</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-cyan-400 font-bold">–</span>
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.lunch.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, end: e.target.value } }))}>
+                      <option value="">End</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Dinner */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium text-cyan-800">🍽️ Dinner</label>
+                  <div className="flex gap-2 items-center">
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.dinner.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, start: e.target.value } }))}>
+                      <option value="">Start</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-cyan-400 font-bold">–</span>
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.dinner.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, end: e.target.value } }))}>
+                      <option value="">End</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Free Time */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-medium text-cyan-800">🧘 Free Time</label>
+                  <div className="flex gap-2 items-center">
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.freeTime.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, start: e.target.value } }))}>
+                      <option value="">Start</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <span className="text-cyan-400 font-bold">–</span>
+                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.freeTime.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, end: e.target.value } }))}>
+                      <option value="">End</option>
+                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
             {/* Weightage Section */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-blue-200">
