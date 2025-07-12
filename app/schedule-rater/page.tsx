@@ -638,23 +638,23 @@ export default function ScheduleRater() {
   }, [openDropdown]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0">
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0">
       {/* Huddle Logo and nav */}
       <div className="flex items-center justify-between px-8 pt-8 pb-2">
         <div className="flex items-center space-x-3">
           <Image src="/images/huddle_logo.png" alt="Huddle Logo" width={220} height={80} />
         </div>
       </div>
-
-      <div className="max-w-4xl mx-auto mt-4">
+      <div className="w-full px-4 sm:px-8 lg:px-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Schedule Rater</h1>
           <p className="text-lg text-gray-700">Upload your schedule — we'll score it using RateMyProfessor, BoilerGrades, and how hectic it looks.</p>
         </div>
+        {/* Do you want to use a new image? */}
         {scheduleGenerated && (
-          <div className="mb-8">
+          <div className="w-full flex flex-col items-center justify-center mb-8">
             <button
-              className="w-full border-2 border-red-600 text-red-600 bg-white py-3 px-6 rounded-xl text-lg font-bold hover:bg-red-50 transition mb-2"
+              className="w-full max-w-xl mx-auto border-2 border-red-600 text-red-600 bg-white py-3 px-6 rounded-xl text-lg font-bold hover:bg-red-50 transition mb-2 text-center"
               onClick={() => {
                 setShowUpload(true);
                 setScheduleGenerated(false);
@@ -667,7 +667,7 @@ export default function ScheduleRater() {
             >
               Do you want to use a new image?
             </button>
-            <div className="text-center text-red-700 font-medium text-sm mt-1">
+            <div className="w-full max-w-xl mx-auto text-center text-red-700 font-medium text-sm mt-1">
               Warning: Clicking this button will reset all progress and require a new reading of your schedule.
             </div>
           </div>
@@ -748,15 +748,15 @@ export default function ScheduleRater() {
         {/* Schedule Editor Section */}
         {scheduleGenerated && (
           <>
-            <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10 border border-green-200 w-full max-w-[1000px] min-w-[700px] mx-auto transition-all flex flex-col items-center justify-center px-2" style={{ overflow: 'visible' }}>
-              <div className="flex items-center justify-between mb-4 w-full">
-                <h2 className="text-3xl font-extrabold text-green-700 tracking-tight">Edit Schedule</h2>
-                <span className="text-gray-500 text-base font-medium">Add, edit, or remove your classes below.</span>
+            {/* Edit Schedule Section - w-full, no max-width or centering */}
+            <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-8 md:p-12 mb-8 border border-green-200 w-full transition-all flex flex-col items-center justify-center" style={{ overflow: 'visible' }}>
+              <div className="flex flex-col items-center gap-1 mb-8 w-full">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-green-700 tracking-tight">Edit Schedule</h2>
+                <span className="text-gray-500 text-base md:text-lg font-medium max-w-xl mx-auto text-center">Add, edit, or remove your classes below.</span>
               </div>
-              {/* Table wrapper with minimal spacing, centered */}
               <div className="w-full relative flex flex-col items-center justify-center">
-                <div className="relative w-full">
-                  <div className="flex flex-row w-full text-xs mb-2 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100 px-1 whitespace-nowrap">
+                <div className="relative w-full overflow-x-auto">
+                  <div className="flex flex-row w-full min-w-[900px] text-xs mb-4 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100 px-2 py-3 whitespace-nowrap">
                     <div className="font-bold text-center flex justify-center items-center py-2 rounded-tl-2xl text-green-900 flex-none w-8">✓</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[0.5]">Subj</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[0.5]">Code</div>
@@ -774,10 +774,10 @@ export default function ScheduleRater() {
                   if (!locationInputRefs.current[idx]) {
                     locationInputRefs.current[idx] = React.createRef<HTMLInputElement>();
                   }
-                  const locationInputRef: React.RefObject<HTMLInputElement> = locationInputRefs.current[idx];
+                  const locationInputRef = locationInputRefs.current[idx];
                   return (
                     <div
-                      className={`flex flex-row w-full mb-2 py-2 text-sm rounded-xl transition-all duration-150 px-2 ${idx % 2 === 1 ? 'bg-gradient-to-r from-green-50 via-cyan-50 to-blue-50' : 'bg-white'} hover:shadow-md hover:scale-[1.01] relative items-center`}
+                      className={`flex flex-row w-full mb-4 py-3 text-sm rounded-xl transition-all duration-150 px-4 gap-4 ${idx % 2 === 1 ? 'bg-gradient-to-r from-green-50 via-cyan-50 to-blue-50' : 'bg-white'} hover:shadow-md hover:scale-[1.01] relative items-center`}
                       style={{ overflow: 'visible' }}
                       key={idx}
                     >
@@ -916,16 +916,16 @@ export default function ScheduleRater() {
               </div>
               <div className="flex justify-end mt-4">
                 <button
-                  className="bg-gradient-to-r from-green-500 to-cyan-500 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-md hover:from-green-600 hover:to-cyan-600 transform transition-all hover:scale-105 flex items-center gap-2"
+                  className="bg-gradient-to-r from-green-500 to-cyan-500 text-white px-8 py-4 rounded-xl font-bold text-xl shadow-md hover:from-green-600 hover:to-cyan-600 transform transition-all hover:scale-105 flex items-center gap-2"
                   onClick={() => setSchedule([...schedule, initialScheduleRow])}
                 >
                   <span className="text-2xl">＋</span> Add Class
                 </button>
               </div>
-              <div className="text-gray-400 text-sm mt-3 text-right font-medium">Tip: Double-click a field to edit.</div>
+              <div className="text-gray-400 text-base mt-3 text-right font-medium">Tip: Double-click a field to edit.</div>
               {/* Explanatory note about the checkbox */}
-              <div className="w-full flex items-center justify-start mt-2 mb-2">
-                <div className="bg-cyan-50 border border-cyan-200 rounded-lg px-4 py-2 text-cyan-800 text-sm flex items-center gap-2">
+              <div className="w-full flex items-center justify-center mt-2 mb-2">
+                <div className="bg-cyan-50 border border-cyan-200 rounded-lg px-4 py-2 text-cyan-800 text-base flex items-center gap-2 mx-auto max-w-xl">
                   <svg className="w-5 h-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="4" fill="#ECFEFF" stroke="#06b6d4" strokeWidth="2"/>
                     <path d="M7 12l3 3 7-7" stroke="#06b6d4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -936,140 +936,136 @@ export default function ScheduleRater() {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-cyan-200 w-full max-w-[1000px] min-w-[700px] mx-auto transition-all flex flex-col items-center justify-center px-2">
-              <h2 className="text-2xl font-semibold text-cyan-700 mb-2">Advanced Options</h2>
-              <div className="w-full mb-6">
-                <div className="flex items-start gap-3 bg-cyan-50 border border-cyan-100 rounded-lg px-4 py-3 text-cyan-800 text-base">
-                  <svg className="w-6 h-6 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
-                  <span>
-                    <b>Set your preferred times for meals and free time.</b> <br/>
-                    We'll use these to help you spot schedule conflicts and optimize your day! This makes your Huddle experience more personalized and helps you balance academics with breaks and self-care.
-                  </span>
+            {/* Advanced Options and Set Weightage side by side, w-full, no max-width or centering */}
+            <div className="flex flex-col md:flex-row gap-8 w-full mb-0">
+              {/* Advanced Options - left */}
+              <div className="bg-white rounded-lg shadow-md p-10 border border-gray-300 flex-1 min-w-[280px] w-full space-y-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-cyan-800 mb-1">Advanced Options</h2>
+                <div className="w-full border-b border-gray-200 mb-4"></div>
+                <div className="w-full mb-4">
+                  <div className="flex items-start gap-3 bg-cyan-50 border border-cyan-100 rounded-md px-4 py-3 text-cyan-800 text-base shadow-sm">
+                    <svg className="w-6 h-6 text-cyan-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
+                    <span>
+                      <b>Set your preferred times for meals and free time.</b> <br/>
+                      We'll use these to help you spot schedule conflicts and optimize your day! This makes your Huddle experience more personalized and helps you balance academics with breaks and self-care.
+                    </span>
+                  </div>
                 </div>
+                <form className="w-full bg-gray-50 rounded-md p-6">
+                  <div className="divide-y divide-gray-200">
+                    {/* Breakfast */}
+                    <div className="grid grid-cols-12 items-center gap-4 py-4">
+                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍳</span>Breakfast</div>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.breakfast.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, start: e.target.value } }))}>
+                        <option value="">Start</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.breakfast.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, end: e.target.value } }))}>
+                        <option value="">End</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    {/* Lunch */}
+                    <div className="grid grid-cols-12 items-center gap-4 py-4">
+                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍽️</span>Lunch</div>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.lunch.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, start: e.target.value } }))}>
+                        <option value="">Start</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.lunch.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, end: e.target.value } }))}>
+                        <option value="">End</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    {/* Dinner */}
+                    <div className="grid grid-cols-12 items-center gap-4 py-4">
+                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍽️</span>Dinner</div>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.dinner.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, start: e.target.value } }))}>
+                        <option value="">Start</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.dinner.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, end: e.target.value } }))}>
+                        <option value="">End</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    {/* Free Time */}
+                    <div className="grid grid-cols-12 items-center gap-4 py-4">
+                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🧘</span>Free Time</div>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.freeTime.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, start: e.target.value } }))}>
+                        <option value="">Start</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.freeTime.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, end: e.target.value } }))}>
+                        <option value="">End</option>
+                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </form>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-                {/* Breakfast */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-cyan-800">🍳 Breakfast</label>
-                  <div className="flex gap-2 items-center">
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.breakfast.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, start: e.target.value } }))}>
-                      <option value="">Start</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <span className="text-cyan-400 font-bold">–</span>
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.breakfast.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, end: e.target.value } }))}>
-                      <option value="">End</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
+              {/* Set Weightage - right */}
+              <div className="bg-white rounded-lg shadow-md p-10 border border-gray-300 flex-1 min-w-[280px] w-full min-h-[600px] md:min-h-[700px] h-full flex flex-col">
+                <div className="flex flex-col mb-4 gap-1">
+                  <h2 className="text-2xl md:text-3xl font-bold text-blue-800">Set Weightage</h2>
+                  <div className="w-full border-b border-gray-200 mt-2 mb-4"></div>
+                  <p className="text-gray-700 text-base md:text-lg mt-2 max-w-2xl">
+                    Adjust the sliders to set how much each factor (professor ratings, grade outcomes, and schedule hecticness) matters to you. Your final schedule score will reflect your personal priorities, helping you find the best fit for your needs.
+                  </p>
                 </div>
-                {/* Lunch */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-cyan-800">🥪 Lunch</label>
-                  <div className="flex gap-2 items-center">
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.lunch.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, start: e.target.value } }))}>
-                      <option value="">Start</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <span className="text-cyan-400 font-bold">–</span>
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.lunch.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, end: e.target.value } }))}>
-                      <option value="">End</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                <div className="flex-1 flex flex-col gap-8 justify-between h-full">
+                  {/* RMP Rating */}
+                  <div className="bg-cyan-50 rounded-lg border border-cyan-100 p-6 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-base font-bold text-gray-700 flex items-center gap-2">RMP Rating <span className="ml-1 align-middle"><InfoIcon text="Based on student reviews from RateMyProfessor.com, this score reflects professor quality, clarity, helpfulness, and teaching style." /></span></label>
+                      <span className="text-base font-bold text-cyan-700">{weightage.rmp}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      value={weightage.rmp}
+                      onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
+                      className="w-full h-3 bg-cyan-100 rounded-md appearance-none cursor-pointer accent-cyan-600 shadow-sm"
+                    />
                   </div>
-                </div>
-                {/* Dinner */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-cyan-800">🍽️ Dinner</label>
-                  <div className="flex gap-2 items-center">
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.dinner.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, start: e.target.value } }))}>
-                      <option value="">Start</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <span className="text-cyan-400 font-bold">–</span>
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.dinner.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, end: e.target.value } }))}>
-                      <option value="">End</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                  {/* Boiler Grades */}
+                  <div className="bg-green-50 rounded-lg border border-green-100 p-6 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-base font-bold text-gray-700 flex items-center gap-2">Boiler Grades <span className="ml-1 align-middle"><InfoIcon text="Reflects the average GPA students have earned in these class over recent semesters." /></span></label>
+                      <span className="text-base font-bold text-green-700">{weightage.boilerGrades}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      value={weightage.boilerGrades}
+                      onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
+                      className="w-full h-3 bg-green-100 rounded-md appearance-none cursor-pointer accent-green-600 shadow-sm"
+                    />
                   </div>
-                </div>
-                {/* Free Time */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-medium text-cyan-800">🧘 Free Time</label>
-                  <div className="flex gap-2 items-center">
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.freeTime.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, start: e.target.value } }))}>
-                      <option value="">Start</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <span className="text-cyan-400 font-bold">–</span>
-                    <select className="border border-cyan-200 rounded-md px-2 py-1 text-sm bg-cyan-50 focus:bg-white focus:ring-2 focus:ring-cyan-200" value={advancedOptions.freeTime.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, end: e.target.value } }))}>
-                      <option value="">End</option>
-                      {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                  {/* Hecticness */}
+                  <div className="bg-blue-50 rounded-lg border border-blue-100 p-6 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-base font-bold text-gray-700 flex items-center gap-2">Hecticness <span className="ml-1 align-middle"><InfoIcon text="Reflects how evenly (or unevenly) your classes are spread out — the more bunched up, the higher the hecticness." /></span></label>
+                      <span className="text-base font-bold text-blue-700">{weightage.hecticness}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      value={weightage.hecticness}
+                      onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
+                      className="w-full h-3 bg-blue-100 rounded-md appearance-none cursor-pointer accent-blue-600 shadow-sm"
+                    />
                   </div>
                 </div>
               </div>
             </div>
-            {/* Weightage Section */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-blue-200">
-              <div className="flex flex-col mb-6">
-                <h2 className="text-2xl font-semibold text-blue-700">Set Weightage</h2>
-                <p className="text-gray-600 text-base mt-2 max-w-2xl">
-                  Adjust the sliders to set how much each factor (professor ratings, grade outcomes, and schedule hecticness) matters to you. Your final schedule score will reflect your personal priorities, helping you find the best fit for your needs.
-                </p>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700 flex items-center">RMP Rating <InfoIcon text="Based on student reviews from RateMyProfessor.com, this score reflects professor quality, clarity, helpfulness, and teaching style." /></label>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="range"
-                        min="0"
-                        value={weightage.rmp}
-                        onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
-                        className="w-80 h-2 bg-cyan-100 rounded-lg appearance-none cursor-pointer accent-cyan-600"
-                      />
-                      <span className="w-10 text-center text-lg font-semibold text-cyan-700">{weightage.rmp}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700 flex items-center">Boiler Grades <InfoIcon text="Reflects the average GPA students have earned in these class over recent semesters." /></label>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="range"
-                        min="0"
-                        value={weightage.boilerGrades}
-                        onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
-                        className="w-80 h-2 bg-green-100 rounded-lg appearance-none cursor-pointer accent-green-600"
-                      />
-                      <span className="w-10 text-center text-lg font-semibold text-green-700">{weightage.boilerGrades}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between mb-2 items-center">
-                    <label className="text-lg font-medium text-gray-700 flex items-center">Hecticness <InfoIcon text="Reflects how evenly (or unevenly) your classes are spread out — the more bunched up, the higher the hecticness." /></label>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="range"
-                        min="0"
-                        value={weightage.hecticness}
-                        onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
-                        className="w-80 h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      />
-                      <span className="w-10 text-center text-lg font-semibold text-blue-700">{weightage.hecticness}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Calculate Score button below both cards, centered and responsive */}
+            <div className="w-full flex justify-center mt-10 mb-0 pb-4">
               <button
-                className="mt-8 w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
+                className="w-full max-w-lg mx-auto bg-gradient-to-r from-green-400 to-cyan-500 text-white py-4 px-8 rounded-xl text-xl font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
                 onClick={() => {
                   const sum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
-                    setFinalScore(calculateFinalScore(weightage, parsed));
+                  setFinalScore(calculateFinalScore(weightage, parsed));
                 }}
               >
                 Calculate Score
@@ -1080,7 +1076,7 @@ export default function ScheduleRater() {
 
         {/* Score Display */}
         {finalScore !== null && (
-          <div className="relative bg-white rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 max-w-[110vw] w-full mx-auto flex flex-col items-center">
+          <div className="relative bg-white rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 mb-8 max-w-5xl w-full mx-auto flex flex-col items-center">
             <h2 className="text-2xl font-semibold mb-4 text-cyan-700">Your Schedule Score</h2>
             {/* Huddle Score Circle replaces the numeric score */}
             <div className="mb-2 flex justify-center">
