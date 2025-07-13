@@ -54,35 +54,71 @@ const ScoreCircle: React.FC<{
   infoItems?: { label: string; value: string | number | null }[];
   additionalContent?: React.ReactNode;
   valueDisplay?: string;
-}> = ({ label, value, color, infoText, icon, infoItems, additionalContent, valueDisplay }) => (
-  <div className="flex flex-col items-center mx-2 mb-6 min-w-[180px] max-w-xs flex-1">
-    <div className="flex items-center gap-2 mb-2">
-      <span className="text-2xl">{icon}</span>
-      <div className="text-lg font-bold text-gray-800 text-center tracking-tight">{label}</div>
-      <InfoIcon text={infoText} />
-    </div>
-    <div
-      className={`w-20 h-20 rounded-full flex items-center justify-center shadow-md mb-3 border-4 ${color} bg-gradient-to-br from-white via-cyan-50 to-blue-50`}
-    >
-      <span className="text-2xl font-extrabold text-gray-800 drop-shadow-lg">{valueDisplay ?? (value !== null ? value : 'N/A')}</span>
-    </div>
-    {infoItems && infoItems.length > 0 && (
-      <div className="w-full space-y-1 mb-2 mt-1">
-        {infoItems.map((item, index) => (
-          <div key={index} className="flex justify-between py-1 px-2 rounded bg-cyan-50/60 text-xs font-medium text-gray-700">
-            <span>{item.label}</span>
-            <span className="font-bold text-cyan-700">{item.value ?? "N/A"}</span>
-          </div>
-        ))}
+}> = ({ label, value, color, infoText, icon, infoItems, additionalContent, valueDisplay }) => {
+  // SVG circle progress parameters
+  const percent = typeof value === 'number' ? Math.max(0, Math.min(100, Math.round(value * 100))) : 0;
+  const radius = 44;
+  const stroke = 8;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = 2 * Math.PI * normalizedRadius;
+  const progress = (percent / 100) * circumference;
+  let strokeColor = '#06b6d4'; // default cyan
+  if (color.includes('blue')) strokeColor = '#3b82f6'; // blue-400
+  if (color.includes('green')) strokeColor = '#22c55e'; // green-400
+  if (color.includes('cyan')) strokeColor = '#06b6d4'; // cyan-400
+
+  return (
+    <div className="flex flex-col items-center mx-2 mb-6 min-w-[180px] max-w-xs flex-1">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-2xl">{icon}</span>
+        <div className="text-lg font-bold text-gray-800 text-center tracking-tight">{label}</div>
+        <InfoIcon text={infoText} />
       </div>
-    )}
-    {additionalContent && (
-      <div className="w-full max-w-xs mt-2">
-        {additionalContent}
+      <div className="relative flex items-center justify-center mb-3" style={{ width: '80px', height: '80px' }}>
+        <svg width="80" height="80" className="block" style={{ borderRadius: '50%', overflow: 'visible', display: 'block', transform: 'rotate(-90deg)' }}>
+          <circle
+            cx="40"
+            cy="40"
+            r={normalizedRadius}
+            fill="#f0fdfa"
+            stroke="#e0e7ef"
+            strokeWidth={stroke}
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r={normalizedRadius}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={stroke}
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference - progress}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(.4,2,.3,1)' }}
+          />
+        </svg>
+        <span className="absolute left-0 top-0 w-full h-full flex items-center justify-center text-2xl font-extrabold text-gray-800 drop-shadow-lg pointer-events-none select-none">
+          {valueDisplay ?? (value !== null ? percent + '%' : 'N/A')}
+        </span>
       </div>
-    )}
-  </div>
-);
+      {infoItems && infoItems.length > 0 && (
+        <div className="w-full space-y-1 mb-2 mt-1">
+          {infoItems.map((item, index) => (
+            <div key={index} className={`flex justify-between py-1 px-2 rounded text-xs font-medium text-gray-700 ${label === 'RMP' ? 'bg-cyan-100' : label === 'BoilerGrades' ? 'bg-green-100' : 'bg-cyan-100'}`}>
+              <span>{item.label}</span>
+              <span className="font-bold text-cyan-700 ml-1">{item.value ?? "N/A"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {additionalContent && (
+        <div className="w-full max-w-xs mt-2">
+          {additionalContent}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const HecticnessCircle: React.FC<any> = (props) => {
   const [openIndexes, setOpenIndexes] = useState<number[]>([]);
@@ -188,6 +224,14 @@ function getCourseDetails(data: { _rawCourses: RawCourse[] }, courseName: string
   return course;
 }
 
+// Helper to get instructor name for a course
+function getInstructorName(courseName: string): string {
+  if (typeof window !== 'undefined' && window.__MOCK_JSON__ && window.__MOCK_JSON__[courseName]) {
+    return window.__MOCK_JSON__[courseName].instructorName || courseName;
+  }
+  return courseName;
+}
+
 const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowestGpaCourse: string | null } }> = ({ data }) => {
   const lowest = data.lowestGpaCourse;
   // Helper to generate a mock GPA if missing
@@ -196,13 +240,16 @@ const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowest
     return (2.7 + (idx % 14) * 0.1).toFixed(2);
   }
   return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {data._rawCourses.map((course: RawCourse, idx: number) => (
-        <div key={course.courseName} className={`px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 ${course.courseName === lowest ? 'border-red-300 bg-red-50' : 'border-green-200'}`}> 
-          <span className="font-semibold text-green-700">{course.courseName}</span>
-          <span className="text-gray-700">{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
-        </div>
-      ))}
+    <div className="w-full">
+      <div className="text-sm font-bold text-green-700 mb-2 text-center">Course Scores</div>
+      <div className="flex flex-col gap-1 items-center">
+        {data._rawCourses.map((course: RawCourse, idx: number) => (
+          <div key={course.courseName} className={`px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 ${course.courseName === lowest ? 'border-red-300 bg-red-50 text-red-700' : 'border-green-200 text-green-700'}`}> 
+            <span className="font-semibold">{course.courseName}</span>
+            <span>{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -213,17 +260,42 @@ const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }
     // Cycle through 2.0 to 5.0
     return (2.0 + (idx % 31) * 0.1).toFixed(2);
   }
+
+  // Map of professor name to { total, count }
+  const profMap: Record<string, { total: number, count: number, idx: number }> = {};
+  data._rawCourses.forEach((course, idx) => {
+    let instructor = '';
+    if (typeof window !== 'undefined' && window.__MOCK_JSON__ && window.__MOCK_JSON__[course.courseName]) {
+      instructor = window.__MOCK_JSON__[course.courseName].instructorName || '';
+    }
+    // Only use instructorName, do not fallback to courseName
+    if (!instructor) instructor = 'Unknown Instructor';
+    const avgQuality = course.avgQuality !== null ? parseFloat(course.avgQuality) : parseFloat(getMockStar(idx));
+    if (!profMap[instructor]) {
+      profMap[instructor] = { total: 0, count: 0, idx };
+    }
+    profMap[instructor].total += avgQuality;
+    profMap[instructor].count += 1;
+  });
+  // Build sorted array of professors
+  const profs = Object.entries(profMap)
+    .map(([name, { total, count, idx }]) => ({ name, avg: (total / count).toFixed(2), idx }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {data._rawCourses.map((course: RawCourse, idx: number) => (
-        <div key={course.courseName} className="px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 border-cyan-200">
-          <span className="font-semibold text-cyan-700">{course.courseName}</span>
-          <span className="flex items-center text-yellow-500">
-            <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-            {course.avgQuality !== null ? course.avgQuality : getMockStar(idx)}
-          </span>
-        </div>
-      ))}
+    <div className="w-full">
+      <div className="text-sm font-bold text-cyan-700 mb-2 text-center">Professor Scores</div>
+      <div className="flex flex-col gap-1 items-center">
+        {profs.map((prof, i) => (
+          <div key={prof.name} className="px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 border-cyan-200">
+            <span className="font-semibold text-cyan-700">{prof.name}</span>
+            <span className="flex items-center text-yellow-500">
+              <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+              {prof.avg}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -318,9 +390,9 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
             icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
             infoItems={[
-              { label: "Most Reviews", value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null },
-              { label: "Most Loved", value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null },
-              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null }
+              { label: "Most Reviews", value: data.mostReviewedCourse ? `${getInstructorName(data.mostReviewedCourse)} (${data.mostReviews})` : null },
+              { label: "Most Loved", value: data.mostLovedCourse ? `${getInstructorName(data.mostLovedCourse)} (${data.highestWouldTakeAgain}%)` : null },
+              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${getInstructorName(data.lowestRmpCourse)} (${data.lowestRmp})` : null }
             ]}
             valueDisplay={percent(data.rmpScore) + '%'}
           />
@@ -335,8 +407,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
             infoItems={[
               { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
-              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null },
-              { label: "Most Difficult", value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null }
+              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null }
             ]}
             valueDisplay={percent(data.boilergradesScore) + '%'}
           />
@@ -368,9 +439,9 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
             icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
             infoItems={[
-              { label: "Most Reviews", value: data.mostReviewedCourse ? `${data.mostReviewedCourse} (${data.mostReviews})` : null },
-              { label: "Most Loved", value: data.mostLovedCourse ? `${data.mostLovedCourse} (${data.highestWouldTakeAgain}%)` : null },
-              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${data.lowestRmpCourse} (${data.lowestRmp})` : null }
+              { label: "Most Reviews", value: data.mostReviewedCourse ? `${getInstructorName(data.mostReviewedCourse)} (${data.mostReviews})` : null },
+              { label: "Most Loved", value: data.mostLovedCourse ? `${getInstructorName(data.mostLovedCourse)} (${data.highestWouldTakeAgain}%)` : null },
+              { label: "Lowest Rating", value: data.lowestRmpCourse ? `${getInstructorName(data.lowestRmpCourse)} (${data.lowestRmp})` : null }
             ]}
             valueDisplay={percent(data.rmpScore) + '%'}
           />
@@ -385,8 +456,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
             infoItems={[
               { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
-              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null },
-              { label: "Most Difficult", value: data.hardestCourse ? `${data.hardestCourse} (${data.highestDifficulty}/5)` : null }
+              { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null }
             ]}
             valueDisplay={percent(data.boilergradesScore) + '%'}
           />

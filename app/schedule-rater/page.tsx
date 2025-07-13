@@ -157,12 +157,13 @@ function parseScheduleRaterJson(data: ScheduleRaterJson) {
 }
 
 const mockJson = {
-  "STAT 35000": { boilergrades_data: { average_gpa: 3.017, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
-  "MGMT 29120": { boilergrades_data: { average_gpa: 3.899, used_course_avg: false }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
-  "MGMT 20100": { boilergrades_data: { average_gpa: 3.291, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
-  "ME 20000": { boilergrades_data: { average_gpa: 2.642, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
-  "ME 27000": { boilergrades_data: { average_gpa: 2.75, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "STAT 35000": { instructorName: "Dr. Lee", boilergrades_data: { average_gpa: 3.017, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "MGMT 29120": { instructorName: "Prof. Patel", boilergrades_data: { average_gpa: 3.899, used_course_avg: false }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "MGMT 20100": { instructorName: "Dr. Smith", boilergrades_data: { average_gpa: 3.291, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "ME 20000": { instructorName: "Dr. Johnson", boilergrades_data: { average_gpa: 2.642, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "ME 27000": { instructorName: "Prof. Chen", boilergrades_data: { average_gpa: 2.75, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
   "MFET 16300": {
+    instructorName: "Dr. Fuerst",
     boilergrades_data: { average_gpa: 3.546, used_course_avg: false },
     rmp_comments: [
       { qualityRating: 3, difficulty: 2, wouldTakeAgain: 1 },
@@ -188,7 +189,7 @@ const mockJson = {
       weaknesses: ["Course is poorly organized with confusing assignments, buggy software, and unhelpful mandatory lectures."]
     }
   },
-  "MA 26500": { boilergrades_data: { average_gpa: 2.63, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
+  "MA 26500": { instructorName: "Dr. Green", boilergrades_data: { average_gpa: 2.63, used_course_avg: true }, rmp_comments: [], comments_summary: { summary: "No comments to summarize.", strengths: [], weaknesses: [] } },
   hecticness_final_score: 0.6,
   boilergrades_final_score: 0.69,
   rmp_final_score: 0.43,
@@ -560,6 +561,11 @@ export default function ScheduleRater() {
     freeTime: { start: '', end: '' },
   });
   useEffect(() => { setIsClient(true); }, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__MOCK_JSON__ = mockJson;
+    }
+  }, []);
 
   const handleWeightageChange = (category: WeightageKey, value: number) => {
     setWeightage(prev => ({
