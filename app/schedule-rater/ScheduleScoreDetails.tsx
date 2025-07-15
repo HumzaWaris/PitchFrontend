@@ -31,19 +31,30 @@ type Props = {
   };
 };
 
-const InfoIcon: React.FC<{ text: string }> = ({ text }) => (
-  <div className="relative group">
-    <button className="text-cyan-500 hover:text-cyan-700 transition-colors">
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-      </svg>
-    </button>
-    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-      {text}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-    </div>
-  </div>
-);
+const InfoIcon: React.FC<{ text: string }> = ({ text }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="relative ml-1">
+      <button
+        type="button"
+        className="text-cyan-500 hover:text-cyan-700 focus:outline-none"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+        tabIndex={0}
+      >
+        <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
+      </button>
+      {show && (
+        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-white border border-cyan-200 rounded-lg shadow-lg p-4 text-sm text-gray-800 font-semibold z-50 flex flex-col items-center">
+          <div className="relative w-full text-center">{text}</div>
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-6 border-r-6 border-b-6 border-transparent border-b-white"></div>
+        </div>
+      )}
+    </span>
+  );
+}
 
 const ScoreCircle: React.FC<{ 
   label: string; 
