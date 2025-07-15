@@ -569,11 +569,24 @@ export default function ScheduleRater() {
     }
   }, []);
 
+  const [disabledSlider, setDisabledSlider] = useState<WeightageKey | null>(null);
+  const [showTooltip, setShowTooltip] = useState<WeightageKey | null>(null);
+
   const handleWeightageChange = (category: WeightageKey, value: number) => {
-    setWeightage(prev => ({
-      ...prev,
-      [category]: value,
-    }));
+    const keys: WeightageKey[] = ['rmp', 'boilerGrades', 'hecticness'];
+    const otherKeys = keys.filter(k => k !== category);
+    const sumOthers = weightage[otherKeys[0]] + weightage[otherKeys[1]];
+    // Clamp value so total never exceeds 100
+    let clampedValue = Math.min(value, 100 - sumOthers);
+    let newWeightage = { ...weightage, [category]: clampedValue };
+
+    if (clampedValue >= 100) {
+      newWeightage = { rmp: 0, boilerGrades: 0, hecticness: 0, [category]: 100 };
+      setDisabledSlider(category);
+    } else {
+      setDisabledSlider(null);
+    }
+    setWeightage(newWeightage);
   };
 
   useEffect(() => {
@@ -645,8 +658,35 @@ export default function ScheduleRater() {
     };
   }, [openDropdown]);
 
+  // Helper to get allowed max for each slider
+  const getAllowedMax = (category: WeightageKey) => {
+    const keys: WeightageKey[] = ['rmp', 'boilerGrades', 'hecticness'];
+    const otherKeys = keys.filter(k => k !== category);
+    return 100 - weightage[otherKeys[0]] - weightage[otherKeys[1]];
+  };
+
+  // Helper to get slider background style
+  const getSliderBackground = (category: WeightageKey, color: string) => {
+    const allowedMax = getAllowedMax(category);
+    // Clamp to [0,100]
+    const stop = Math.max(0, Math.min(allowedMax, 100));
+    // Color for the active part
+    let activeColor = color;
+    if (color === 'cyan') activeColor = '#22d3ee';
+    if (color === 'green') activeColor = '#4ade80';
+    if (color === 'blue') activeColor = '#60a5fa';
+    // Grey for the rest
+    const grey = '#e5e7eb';
+    return {
+      background: `linear-gradient(90deg, ${activeColor} 0% ${stop}%, ${grey} ${stop}%, ${grey} 100%)`
+    };
+  };
+
+  const weightageSum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
+  const [showCalcTooltip, setShowCalcTooltip] = useState(false);
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0">
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0 pb-24">
       {/* Huddle Logo and nav */}
       <div className="flex items-center justify-between px-8 pt-8 pb-2">
         <div className="flex items-center space-x-3">
@@ -1031,10 +1071,20 @@ export default function ScheduleRater() {
                     <input
                       type="range"
                       min="0"
+                      max={100}
                       value={weightage.rmp}
                       onChange={e => handleWeightageChange('rmp', Number(e.target.value))}
-                      className="w-full h-3 bg-cyan-100 rounded-md appearance-none cursor-pointer accent-cyan-600 shadow-sm"
+                      className={`w-full h-3 rounded-md appearance-none accent-cyan-600 shadow-sm ${(disabledSlider && disabledSlider !== 'rmp') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      style={getSliderBackground('rmp', 'cyan')}
+                      disabled={!!(disabledSlider && disabledSlider !== 'rmp')}
+                      onMouseEnter={() => { if (disabledSlider && disabledSlider !== 'rmp') setShowTooltip('rmp'); }}
+                      onMouseLeave={() => setShowTooltip(null)}
                     />
+                    {showTooltip === 'rmp' && disabledSlider && disabledSlider !== 'rmp' && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-700 text-white text-xs rounded shadow z-10">
+                        Set to 0 because another weightage is 100.
+                      </div>
+                    )}
                   </div>
                   {/* Boiler Grades */}
                   <div className="bg-green-50 rounded-lg border border-green-100 p-6 mb-4">
@@ -1045,10 +1095,20 @@ export default function ScheduleRater() {
                     <input
                       type="range"
                       min="0"
+                      max={100}
                       value={weightage.boilerGrades}
                       onChange={e => handleWeightageChange('boilerGrades', Number(e.target.value))}
-                      className="w-full h-3 bg-green-100 rounded-md appearance-none cursor-pointer accent-green-600 shadow-sm"
+                      className={`w-full h-3 rounded-md appearance-none accent-green-600 shadow-sm ${(disabledSlider && disabledSlider !== 'boilerGrades') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      style={getSliderBackground('boilerGrades', 'green')}
+                      disabled={!!(disabledSlider && disabledSlider !== 'boilerGrades')}
+                      onMouseEnter={() => { if (disabledSlider && disabledSlider !== 'boilerGrades') setShowTooltip('boilerGrades'); }}
+                      onMouseLeave={() => setShowTooltip(null)}
                     />
+                    {showTooltip === 'boilerGrades' && disabledSlider && disabledSlider !== 'boilerGrades' && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-700 text-white text-xs rounded shadow z-10">
+                        Set to 0 because another weightage is 100.
+                      </div>
+                    )}
                   </div>
                   {/* Hecticness */}
                   <div className="bg-blue-50 rounded-lg border border-blue-100 p-6 mb-4">
@@ -1059,25 +1119,46 @@ export default function ScheduleRater() {
                     <input
                       type="range"
                       min="0"
+                      max={100}
                       value={weightage.hecticness}
                       onChange={e => handleWeightageChange('hecticness', Number(e.target.value))}
-                      className="w-full h-3 bg-blue-100 rounded-md appearance-none cursor-pointer accent-blue-600 shadow-sm"
+                      className={`w-full h-3 rounded-md appearance-none accent-blue-600 shadow-sm ${(disabledSlider && disabledSlider !== 'hecticness') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      style={getSliderBackground('hecticness', 'blue')}
+                      disabled={!!(disabledSlider && disabledSlider !== 'hecticness')}
+                      onMouseEnter={() => { if (disabledSlider && disabledSlider !== 'hecticness') setShowTooltip('hecticness'); }}
+                      onMouseLeave={() => setShowTooltip(null)}
                     />
+                    {showTooltip === 'hecticness' && disabledSlider && disabledSlider !== 'hecticness' && (
+                      <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-700 text-white text-xs rounded shadow z-10">
+                        Set to 0 because another weightage is 100.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
             {/* Calculate Score button below both cards, centered and responsive */}
             <div className="w-full flex justify-center mt-10 mb-0 pb-4">
-              <button
-                className="w-full max-w-lg mx-auto bg-gradient-to-r from-green-400 to-cyan-500 text-white py-4 px-8 rounded-xl text-xl font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
-                onClick={() => {
-                  const sum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
-                  setFinalScore(calculateFinalScore(weightage, parsed));
-                }}
-              >
-                Calculate Score
-              </button>
+              <div className="relative w-full max-w-lg mx-auto">
+                <button
+                  className={`w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-4 px-8 rounded-xl text-xl font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md ${weightageSum !== 100 ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  onClick={() => {
+                    if (weightageSum === 100) {
+                      setFinalScore(calculateFinalScore(weightage, parsed));
+                    }
+                  }}
+                  disabled={weightageSum !== 100}
+                  onMouseEnter={() => { if (weightageSum !== 100) setShowCalcTooltip(true); }}
+                  onMouseLeave={() => setShowCalcTooltip(false)}
+                >
+                  Calculate Score
+                </button>
+                {showCalcTooltip && weightageSum !== 100 && (
+                  <div className="absolute left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-gray-700 text-white text-base rounded shadow z-10 text-center whitespace-nowrap">
+                    The weights must add up to 100 to calculate the score.
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
