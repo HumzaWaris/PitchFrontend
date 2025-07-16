@@ -9,9 +9,18 @@ export default function SimpleDropdownTest() {
 
   return (
     <div className="relative w-64 mx-auto mt-10">
+      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        {/* Textbook SVG icon */}
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-cyan-400">
+          <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2" />
+          <path d="M8 4v16" strokeWidth="2" />
+          <path d="M16 4v16" strokeWidth="2" />
+          <path d="M4 8h16" strokeWidth="2" />
+        </svg>
+      </span>
       <input
         ref={inputRef}
-        className="w-full border border-gray-300 rounded-md px-3 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 text-sm h-10"
+        className="w-full border border-gray-300 rounded-md px-10 py-2 text-center bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-300 text-sm h-10"
         value={selected}
         onFocus={() => setOpen(true)}
         onChange={e => setSelected(e.target.value)}

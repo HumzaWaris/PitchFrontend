@@ -255,15 +255,15 @@ const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowest
         {data._rawCourses.map((course: RawCourse, idx: number) => (
           <div
             key={course.courseName}
-            className={`flex items-center px-2 py-1 rounded-full text-[13px] font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words
+            className={`flex items-center px-8 py-1.5 rounded-full text-sm font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words min-w-0 flex-wrap
               ${course.courseName === lowest
                 ? 'border-red-300 bg-red-50 text-red-600'
                 : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}
             `}
             style={{ boxShadow: course.courseName === lowest ? '0 0 0 2px #fecaca' : 'none', minWidth: 0 }}
           >
-            <span className="mr-1 font-bold break-words">{course.courseName}</span>
-            <span>{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
+            <span className="mr-1 font-bold break-words truncate max-w-[60%]">{course.courseName}</span>
+            <span className="whitespace-nowrap">{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
           </div>
         ))}
       </div>
@@ -299,14 +299,12 @@ const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }
         {profs.map((prof, idx) => (
           <div
             key={prof.name}
-            className={`flex items-center px-2 py-1 rounded-full text-[13px] font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words
-              border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100
-            `}
+            className={`flex items-center px-8 py-1.5 rounded-full text-sm font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words min-w-0 flex-wrap border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100`}
             style={{ minWidth: 0 }}
           >
-            <span className="mr-1 font-bold break-words">{prof.name}</span>
-            <span className="flex items-center text-yellow-500 font-bold">
-              <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+            <span className="mr-1 font-bold break-words truncate max-w-[60%]">{prof.name}</span>
+            <span className="flex items-center text-yellow-500 font-bold whitespace-nowrap">
+              <svg className="w-3 h-3 mr-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
               {prof.avg}
             </span>
           </div>
@@ -328,7 +326,7 @@ const BigScoreCircle: React.FC<{ value: number | null }> = ({ value }) => (
 );
 
 const SubScoreCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex flex-col flex-1 bg-white rounded-2xl shadow-lg border border-cyan-100 p-8 min-w-[260px] max-w-sm w-full items-center space-y-4">
+  <div className="flex flex-col flex-1 bg-white rounded-2xl shadow-lg border border-cyan-100 min-w-[260px] max-w-sm w-full space-y-4">
     {children}
   </div>
 );
@@ -393,7 +391,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.hecticnessScore}
             color="border-blue-400"
             infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
-            icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
+            icon={<svg className="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path d="M12 6v6l4 2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
             explanation={explanation}
             valueDisplay={percent(data.hecticnessScore) + '%'}
           />
@@ -404,7 +402,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.rmpScore}
             color="border-cyan-400"
             infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
-            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
+            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path d="M16.5 7c.5-1.5 0-4-2-4s-2.5 2-2.5 2" strokeLinecap="round"/><path d="M12 7c-4.5 0-6 3.5-6 6.5C6 18 9 21 12 21s6-3 6-7.5C18 10.5 16.5 7 12 7z" fill="currentColor" stroke="currentColor"/><path d="M15 4.5c.5-.5 1.5-1 2-1.5" strokeLinecap="round"/><path d="M12 7c.5-1.5 2-2 2-2" strokeLinecap="round"/><ellipse cx="9.5" cy="11" rx=".75" ry="1" fill="#fff"/></svg>}
             infoItems={[
               { label: "Most Reviews", value: data.mostReviewedCourse ? `${getInstructorName(data.mostReviewedCourse)} (${data.mostReviews})` : null },
               { label: "Most Loved", value: data.mostLovedCourse ? `${getInstructorName(data.mostLovedCourse)} (${data.highestWouldTakeAgain}%)` : null },
@@ -420,7 +418,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.boilergradesScore}
             color="border-green-400"
             infoText="Based on actual GPA data from past semesters. Higher scores indicate better grade outcomes and easier classes."
-            icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
+            icon={<svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19.5V6a2 2 0 012-2h12a2 2 0 012 2v13.5M4 19.5A2.5 2.5 0 006.5 22h11A2.5 2.5 0 0020 19.5M4 19.5V6m16 13.5V6" strokeWidth="2"/><path d="M8 10h8M8 14h8" strokeWidth="2"/></svg>}
             infoItems={[
               { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
               { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null }
@@ -442,7 +440,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.hecticnessScore}
             color="border-blue-400"
             infoText="Measures how evenly your classes are spread out. Higher scores mean more bunched up schedules with less free time between classes."
-            icon={<svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" /></svg>}
+            icon={<svg className="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path d="M12 6v6l4 2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
             explanation={explanation}
             valueDisplay={percent(data.hecticnessScore) + '%'}
           />
@@ -453,7 +451,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.rmpScore}
             color="border-cyan-400"
             infoText="Based on RateMyProfessor student reviews. Reflects professor quality, clarity, helpfulness, and teaching effectiveness."
-            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0 0H5a2 2 0 01-2-2v-4m9 6h7a2 2 0 002-2v-4" /></svg>}
+            icon={<svg className="w-7 h-7 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path d="M16.5 7c.5-1.5 0-4-2-4s-2.5 2-2.5 2" strokeLinecap="round"/><path d="M12 7c-4.5 0-6 3.5-6 6.5C6 18 9 21 12 21s6-3 6-7.5C18 10.5 16.5 7 12 7z" fill="currentColor" stroke="currentColor"/><path d="M15 4.5c.5-.5 1.5-1 2-1.5" strokeLinecap="round"/><path d="M12 7c.5-1.5 2-2 2-2" strokeLinecap="round"/><ellipse cx="9.5" cy="11" rx=".75" ry="1" fill="#fff"/></svg>}
             infoItems={[
               { label: "Most Reviews", value: data.mostReviewedCourse ? `${getInstructorName(data.mostReviewedCourse)} (${data.mostReviews})` : null },
               { label: "Most Loved", value: data.mostLovedCourse ? `${getInstructorName(data.mostLovedCourse)} (${data.highestWouldTakeAgain}%)` : null },
@@ -469,7 +467,7 @@ const ScheduleScoreDetails: React.FC<Props & { data: Props['data'] & { _rawCours
             value={data.boilergradesScore}
             color="border-green-400"
             infoText="Based on actual GPA data from past semesters. Higher scores indicate better grade outcomes and easier classes."
-            icon={<svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 10v4m8-8h-4m-4 0H4" /></svg>}
+            icon={<svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19.5V6a2 2 0 012-2h12a2 2 0 012 2v13.5M4 19.5A2.5 2.5 0 006.5 22h11A2.5 2.5 0 0020 19.5M4 19.5V6m16 13.5V6" strokeWidth="2"/><path d="M8 10h8M8 14h8" strokeWidth="2"/></svg>}
             infoItems={[
               { label: "Lowest GPA", value: data.lowestGpaCourse ? `${data.lowestGpaCourse} (${data.lowestGpa})` : null },
               { label: "Highest GPA", value: highestGpaCourse ? `${highestGpaCourse} (${highestGpa})` : null }
