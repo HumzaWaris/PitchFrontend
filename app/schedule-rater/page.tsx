@@ -519,6 +519,25 @@ function InfoIcon({ text }: InfoIconProps) {
   );
 }
 
+// Add this helper for 12-hour time options for meals
+const mealTimeOptions = [
+  '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM',
+  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
+  '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM',
+  '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM'
+];
+
+// Define meal-specific time options
+const breakfastTimeOptions = [
+  '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM'
+];
+const lunchTimeOptions = [
+  '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM'
+];
+const dinnerTimeOptions = [
+  '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'
+];
+
 export default function ScheduleRater() {
   const [weightage, setWeightage] = useState({
     rmp: 33,
@@ -561,6 +580,7 @@ export default function ScheduleRater() {
     lunch: { start: '', end: '' },
     dinner: { start: '', end: '' },
     freeTime: { start: '', end: '' },
+    backToBack: '',
   });
   useEffect(() => { setIsClient(true); }, []);
   useEffect(() => {
@@ -804,7 +824,7 @@ export default function ScheduleRater() {
               </div>
               <div className="w-full relative flex flex-col items-center justify-center">
                 <div className="relative w-full overflow-x-auto">
-                  <div className="flex flex-row w-full min-w-[900px] text-xs mb-4 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100 px-2 py-3 whitespace-nowrap">
+                  <div className="flex flex-row w-full min-w-[900px] text-xs mb-4 bg-gradient-to-r from-green-100 via-cyan-50 to-blue-100 rounded-2xl shadow-sm border border-green-100 px-4 gap-4 py-3 whitespace-nowrap">
                     <div className="font-bold text-center flex justify-center items-center py-2 rounded-tl-2xl text-green-900 flex-none w-8">✓</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[0.5]">Subj</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[0.5]">Code</div>
@@ -815,7 +835,7 @@ export default function ScheduleRater() {
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[2]">Loc</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-1">Instr</div>
                     <div className="font-bold text-center flex justify-center items-center py-2 text-green-900 flex-[0.5]">Cr</div>
-                    <div className="font-bold text-center flex justify-center items-center py-2 rounded-tr-2xl text-green-900 flex-none w-8">❌</div>
+                    <div className="font-bold text-center flex justify-center items-center py-2 flex-none w-8"></div>
                   </div>
                 {schedule.map((row, idx) => {
                   // Ensure the ref exists and is always a RefObject<HTMLInputElement>
@@ -1002,52 +1022,60 @@ export default function ScheduleRater() {
                 <form className="w-full bg-gray-50 rounded-md p-6">
                   <div className="divide-y divide-gray-200">
                     {/* Breakfast */}
-                    <div className="grid grid-cols-12 items-center gap-4 py-4">
-                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍳</span>Breakfast</div>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.breakfast.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, start: e.target.value } }))}>
-                        <option value="">Start</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.breakfast.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, end: e.target.value } }))}>
-                        <option value="">End</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                    <div className="w-full flex items-center gap-2 py-4">
+                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap min-w-[120px]"><span className="text-xl">🍳</span>Breakfast</div>
+                      <div className="flex-1 flex justify-end gap-2">
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.breakfast.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, start: e.target.value } }))}>
+                          <option value="">Start</option>
+                          {breakfastTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.breakfast.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, breakfast: { ...opt.breakfast, end: e.target.value } }))}>
+                          <option value="">End</option>
+                          {breakfastTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
                     </div>
                     {/* Lunch */}
-                    <div className="grid grid-cols-12 items-center gap-4 py-4">
-                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍽️</span>Lunch</div>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.lunch.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, start: e.target.value } }))}>
-                        <option value="">Start</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.lunch.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, end: e.target.value } }))}>
-                        <option value="">End</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                    <div className="w-full flex items-center gap-2 py-4">
+                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap min-w-[120px]"><span className="text-xl">🍽️</span>Lunch</div>
+                      <div className="flex-1 flex justify-end gap-2">
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.lunch.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, start: e.target.value } }))}>
+                          <option value="">Start</option>
+                          {lunchTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.lunch.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, lunch: { ...opt.lunch, end: e.target.value } }))}>
+                          <option value="">End</option>
+                          {lunchTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
                     </div>
                     {/* Dinner */}
-                    <div className="grid grid-cols-12 items-center gap-4 py-4">
-                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🍽️</span>Dinner</div>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.dinner.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, start: e.target.value } }))}>
-                        <option value="">Start</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.dinner.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, end: e.target.value } }))}>
-                        <option value="">End</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                    <div className="w-full flex items-center gap-2 py-4">
+                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap min-w-[120px]"><span className="text-xl">🍽️</span>Dinner</div>
+                      <div className="flex-1 flex justify-end gap-2">
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.dinner.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, start: e.target.value } }))}>
+                          <option value="">Start</option>
+                          {dinnerTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28" value={advancedOptions.dinner.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, dinner: { ...opt.dinner, end: e.target.value } }))}>
+                          <option value="">End</option>
+                          {dinnerTimeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
                     </div>
-                    {/* Free Time */}
-                    <div className="grid grid-cols-12 items-center gap-4 py-4">
-                      <div className="col-span-3 flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🧘</span>Free Time</div>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4 ml-2" value={advancedOptions.freeTime.start} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, start: e.target.value } }))}>
-                        <option value="">Start</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <select className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm col-span-4" value={advancedOptions.freeTime.end} onChange={e => setAdvancedOptions(opt => ({ ...opt, freeTime: { ...opt.freeTime, end: e.target.value } }))}>
-                        <option value="">End</option>
-                        {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                    {/* Back-to-Back Classes */}
+                    <div className="w-full flex items-center gap-2 py-4">
+                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap min-w-[120px]"><span className="text-xl">🧩</span>Back-to-Back Classes</div>
+                      <div className="flex-1 flex justify-end gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          className="border border-gray-300 rounded-md px-3 py-2 text-base bg-white focus:bg-cyan-50 focus:ring-2 focus:ring-cyan-200 shadow-sm w-28 text-center"
+                          value={advancedOptions.backToBack || ''}
+                          onChange={e => setAdvancedOptions(opt => ({ ...opt, backToBack: e.target.value.replace(/[^0-9]/g, '') }))}
+                          placeholder="Number"
+                        />
+                      </div>
                     </div>
                   </div>
                 </form>

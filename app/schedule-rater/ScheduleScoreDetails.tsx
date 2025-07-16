@@ -245,18 +245,24 @@ function getInstructorName(courseName: string): string {
 
 const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowestGpaCourse: string | null } }> = ({ data }) => {
   const lowest = data.lowestGpaCourse;
-  // Helper to generate a mock GPA if missing
   function getMockGpa(idx: number) {
-    // Cycle through 2.7 to 4.0
     return (2.7 + (idx % 14) * 0.1).toFixed(2);
   }
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full">
       <div className="text-sm font-bold text-green-700 mb-2 text-center">Course Scores</div>
-      <div className="flex flex-col gap-1 items-center">
+      <div className="w-full max-w-full overflow-x-hidden mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 mt-1 mb-1 px-2 justify-items-center">
         {data._rawCourses.map((course: RawCourse, idx: number) => (
-          <div key={course.courseName} className={`px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 ${course.courseName === lowest ? 'border-red-300 bg-red-50 text-red-700' : 'border-green-200 text-green-700'}`}> 
-            <span className="font-semibold">{course.courseName}</span>
+          <div
+            key={course.courseName}
+            className={`flex items-center px-2 py-1 rounded-full text-[13px] font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words
+              ${course.courseName === lowest
+                ? 'border-red-300 bg-red-50 text-red-600'
+                : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}
+            `}
+            style={{ boxShadow: course.courseName === lowest ? '0 0 0 2px #fecaca' : 'none', minWidth: 0 }}
+          >
+            <span className="mr-1 font-bold break-words">{course.courseName}</span>
             <span>{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
           </div>
         ))}
@@ -266,20 +272,15 @@ const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowest
 };
 
 const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }) => {
-  // Helper to generate a mock star rating if missing
   function getMockStar(idx: number) {
-    // Cycle through 2.0 to 5.0
     return (2.0 + (idx % 31) * 0.1).toFixed(2);
   }
-
-  // Map of professor name to { total, count }
   const profMap: Record<string, { total: number, count: number, idx: number }> = {};
   data._rawCourses.forEach((course, idx) => {
     let instructor = '';
     if (typeof window !== 'undefined' && window.__MOCK_JSON__ && window.__MOCK_JSON__[course.courseName]) {
       instructor = window.__MOCK_JSON__[course.courseName].instructorName || '';
     }
-    // Only use instructorName, do not fallback to courseName
     if (!instructor) instructor = 'Unknown Instructor';
     const avgQuality = course.avgQuality !== null ? parseFloat(course.avgQuality) : parseFloat(getMockStar(idx));
     if (!profMap[instructor]) {
@@ -288,19 +289,23 @@ const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }
     profMap[instructor].total += avgQuality;
     profMap[instructor].count += 1;
   });
-  // Build sorted array of professors
   const profs = Object.entries(profMap)
     .map(([name, { total, count, idx }]) => ({ name, avg: (total / count).toFixed(2), idx }))
     .sort((a, b) => a.name.localeCompare(b.name));
-
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full">
       <div className="text-sm font-bold text-cyan-700 mb-2 text-center">Professor Scores</div>
-      <div className="flex flex-col gap-1 items-center">
-        {profs.map((prof, i) => (
-          <div key={prof.name} className="px-2 py-0.5 rounded-lg border flex items-center gap-1 text-xs font-medium bg-white/80 border-cyan-200">
-            <span className="font-semibold text-cyan-700">{prof.name}</span>
-            <span className="flex items-center text-yellow-500">
+      <div className="w-full max-w-full overflow-x-hidden mx-auto grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 mt-1 mb-1 px-2 justify-items-center">
+        {profs.map((prof, idx) => (
+          <div
+            key={prof.name}
+            className={`flex items-center px-2 py-1 rounded-full text-[13px] font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words
+              border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100
+            `}
+            style={{ minWidth: 0 }}
+          >
+            <span className="mr-1 font-bold break-words">{prof.name}</span>
+            <span className="flex items-center text-yellow-500 font-bold">
               <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
               {prof.avg}
             </span>
