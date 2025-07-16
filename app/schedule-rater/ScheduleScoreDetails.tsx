@@ -262,7 +262,7 @@ const PerCourseBoilerGrades: React.FC<{ data: { _rawCourses: RawCourse[]; lowest
             `}
             style={{ boxShadow: course.courseName === lowest ? '0 0 0 2px #fecaca' : 'none', minWidth: 0 }}
           >
-            <span className="mr-1 font-bold break-words truncate max-w-[60%]">{course.courseName}</span>
+            <span className="mr-1 font-bold break-words">{course.courseName}</span>
             <span className="whitespace-nowrap">{course.gpa !== null ? course.gpa : getMockGpa(idx)}</span>
           </div>
         ))}
@@ -302,7 +302,7 @@ const PerCourseRMP: React.FC<{ data: { _rawCourses: RawCourse[] } }> = ({ data }
             className={`flex items-center px-8 py-1.5 rounded-full text-sm font-semibold border transition-all whitespace-nowrap mb-1 max-w-full w-full justify-center break-words min-w-0 flex-wrap border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100`}
             style={{ minWidth: 0 }}
           >
-            <span className="mr-1 font-bold break-words truncate max-w-[60%]">{prof.name}</span>
+            <span className="mr-1 font-bold break-words">{prof.name}</span>
             <span className="flex items-center text-yellow-500 font-bold whitespace-nowrap">
               <svg className="w-3 h-3 mr-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" /></svg>
               {prof.avg}
