@@ -131,11 +131,13 @@ function parseScheduleRaterJson(data: ScheduleRaterJson) {
   // Build allCourses array for strengths/weaknesses
   const allCourses = courseEntries.map(([course, courseData]) => ({
     courseName: course,
+    instructorName: (courseData as any).instructorName || '',
     strengths: courseData.comments_summary?.strengths || [],
     weaknesses: courseData.comments_summary?.weaknesses || [],
   }));
 
   // Add summaryCourse, summaryStrength, summaryWeakness (default to null)
+  // Also add _rawCourses for UI use
   return {
     finalScore: Math.round(finalScore * 100) / 100,
     hecticnessScore: Math.round(hecticnessScore * 100) / 100,
@@ -155,6 +157,7 @@ function parseScheduleRaterJson(data: ScheduleRaterJson) {
     summaryStrength: null,
     summaryWeakness: null,
     allCourses,
+    _rawCourses: allCourses, // Add this for UI use
   };
 }
 
@@ -550,6 +553,14 @@ export default function ScheduleRater() {
   const [scheduleUploaded, setScheduleUploaded] = useState(false);
   const [scheduleGenerated, setScheduleGenerated] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  // New state for CRN verification flow
+  const [showCrnVerification, setShowCrnVerification] = useState(false);
+  const [crnVerificationComplete, setCrnVerificationComplete] = useState(false);
+  const [secondLoading, setSecondLoading] = useState(false);
+  const [secondProgress, setSecondProgress] = useState(0);
+  const [secondTipIndex, setSecondTipIndex] = useState(0);
+  
   const initialScheduleRow: ScheduleRow = {
     courseSubject: '',
     courseCode: '',
@@ -560,7 +571,28 @@ export default function ScheduleRater() {
     instructorName: '',
     credits: ''
   };
+  
+  // CRN row type
+  type CrnRow = {
+    courseSubject: string;
+    courseCode: string;
+    courseType: string;
+    crnNumber: string;
+    instructorName: string;
+    credits: string;
+  };
+  
+  const initialCrnRow: CrnRow = {
+    courseSubject: '',
+    courseCode: '',
+    courseType: '',
+    crnNumber: '',
+    instructorName: '',
+    credits: ''
+  };
+  
   const [schedule, setSchedule] = useState<ScheduleRow[]>([initialScheduleRow]);
+  const [crnSchedule, setCrnSchedule] = useState<CrnRow[]>([initialCrnRow]);
   const [showUpload, setShowUpload] = useState(true);
   const [loading, setLoading] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
@@ -609,24 +641,70 @@ export default function ScheduleRater() {
     setWeightage(newWeightage);
   };
 
+  // --- Replace the loading and secondLoading useEffects with synchronized progress logic ---
+
+  // First loading effect (7 seconds)
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    let tipInterval: NodeJS.Timeout;
+    const duration = 7000; // 7 seconds
     if (loading) {
       setProgress(0);
       setTipIndex(0);
+      const start = Date.now();
       interval = setInterval(() => {
-        setProgress((prev) => (prev < 100 ? prev + 1 : 100));
-      }, 100);
+        const elapsed = Date.now() - start;
+        const percent = Math.min(100, Math.round((elapsed / duration) * 100));
+        setProgress(percent);
+        if (percent >= 100) {
+          clearInterval(interval);
+        }
+      }, 50);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  // Second loading effect (10 seconds)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const duration = 10000; // 10 seconds
+    if (secondLoading) {
+      setSecondProgress(0);
+      setSecondTipIndex(0);
+      const start = Date.now();
+      interval = setInterval(() => {
+        const elapsed = Date.now() - start;
+        const percent = Math.min(100, Math.round((elapsed / duration) * 100));
+        setSecondProgress(percent);
+        if (percent >= 100) {
+          clearInterval(interval);
+        }
+      }, 50);
+    }
+    return () => clearInterval(interval);
+  }, [secondLoading]);
+
+  // --- Also, ensure the tipIndex and secondTipIndex still rotate every 3s ---
+  useEffect(() => {
+    let tipInterval: NodeJS.Timeout;
+    if (loading) {
+      setTipIndex(0);
       tipInterval = setInterval(() => {
         setTipIndex((prev) => (prev + 1) % loadingTips.length);
       }, 3000);
     }
-    return () => {
-      clearInterval(interval);
-      clearInterval(tipInterval);
-    };
+    return () => clearInterval(tipInterval);
   }, [loading]);
+
+  useEffect(() => {
+    let tipInterval: NodeJS.Timeout;
+    if (secondLoading) {
+      setSecondTipIndex(0);
+      tipInterval = setInterval(() => {
+        setSecondTipIndex((prev) => (prev + 1) % loadingTips.length);
+      }, 3000);
+    }
+    return () => clearInterval(tipInterval);
+  }, [secondLoading]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -705,6 +783,9 @@ export default function ScheduleRater() {
   const weightageSum = weightage.rmp + weightage.boilerGrades + weightage.hecticness;
   const [showCalcTooltip, setShowCalcTooltip] = useState(false);
 
+  // Add state for comments summary dropdown
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-green-300 via-cyan-300 to-blue-400 py-0 px-0 pb-24">
       {/* Huddle Logo and nav */}
@@ -729,8 +810,13 @@ export default function ScheduleRater() {
                 setScheduleUploaded(false);
                 setSelectedFile(null);
                 setSchedule([initialScheduleRow]);
+                setCrnSchedule([initialCrnRow]);
                 setFinalScore(null);
                 setAnalysisOpen(false);
+                setShowCrnVerification(false);
+                setCrnVerificationComplete(false);
+                setSecondLoading(false);
+                setCommentsOpen(false);
               }}
             >
               Do you want to use a new image?
@@ -773,16 +859,23 @@ export default function ScheduleRater() {
                 className="mt-6 w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
                 onClick={() => {
                   setLoading(true);
+                  setShowCrnVerification(false);
+                  setCrnVerificationComplete(false);
+                  setSecondLoading(false);
+                  setScheduleGenerated(false);
+                  setCommentsOpen(false);
                   setTimeout(() => {
-                    setScheduleGenerated(true);
-                    setShowUpload(false);
-                    setSchedule([
-                      { courseSubject: 'CS', courseCode: '101', courseType: 'Lecture', courseDays: ['Mon', 'Wed', 'Fri'], courseTime: { start: '10:00', end: '10:50' }, courseLocation: 'WALC 101', instructorName: 'Dr. Smith', credits: '3' },
-                      { courseSubject: 'MATH', courseCode: '201', courseType: 'Lecture', courseDays: ['Tue', 'Thu'], courseTime: { start: '11:00', end: '11:50' }, courseLocation: 'WALC 201', instructorName: 'Dr. Johnson', credits: '3' },
-                      { courseSubject: 'ENG', courseCode: '101', courseType: 'Lecture', courseDays: ['Mon', 'Wed', 'Fri'], courseTime: { start: '12:00', end: '12:50' }, courseLocation: 'WALC 301', instructorName: 'Dr. Brown', credits: '3' }
-                    ]);
                     setLoading(false);
-                  }, 10000);
+                    setShowCrnVerification(true);
+                    setShowUpload(false);
+                    const initialClasses = [
+                      { courseSubject: 'CS', courseCode: '101', courseType: 'Lecture', crnNumber: '12345', instructorName: 'Dr. Smith', credits: '3', courseDays: ['Mon', 'Wed', 'Fri'], courseTime: { start: '10:00', end: '10:50' }, courseLocation: 'WALC 101' },
+                      { courseSubject: 'MATH', courseCode: '201', courseType: 'Lecture', crnNumber: '23456', instructorName: 'Dr. Johnson', credits: '3', courseDays: ['Tue', 'Thu'], courseTime: { start: '11:00', end: '11:50' }, courseLocation: 'WALC 201' },
+                      { courseSubject: 'ENG', courseCode: '101', courseType: 'Lecture', crnNumber: '34567', instructorName: 'Dr. Brown', credits: '3', courseDays: ['Mon', 'Wed', 'Fri'], courseTime: { start: '12:00', end: '12:50' }, courseLocation: 'WALC 301' }
+                    ];
+                    setCrnSchedule(initialClasses.map(({ courseSubject, courseCode, courseType, crnNumber, instructorName, credits }) => ({ courseSubject, courseCode, courseType, crnNumber, instructorName: instructorName || '', credits: credits || '' })));
+                    setSchedule(initialClasses.map(({ courseSubject, courseCode, courseType, instructorName, credits, courseDays, courseTime, courseLocation }) => ({ courseSubject, courseCode, courseType, instructorName, credits, courseDays, courseTime, courseLocation })));
+                  }, 7000);
                 }}
               >
                 Generate Schedule
@@ -1239,48 +1332,164 @@ export default function ScheduleRater() {
               {analysisOpen ? 'Hide' : 'Show'} Schedule Analysis
               <span className="ml-2">{analysisOpen ? '▲' : '▼'}</span>
             </button>
-            {analysisOpen && (
-              <div className="relative w-full flex flex-col items-center mt-4">
-                {/* Sub-category Cards Row */}
-                <div className="flex flex-col md:flex-row justify-center items-stretch gap-x-8 w-full max-w-[105vw] mx-auto">
-                  {(() => {
-                    const allCourses = parsed.allCourses || [];
-                    const _rawCourses = allCourses.map((c: { courseName: string }) => {
-                      const courseData = (typeof window !== 'undefined' && window.__MOCK_JSON__ ? window.__MOCK_JSON__ : {})[c.courseName] || {};
-                      const gpa = courseData.boilergrades_data?.average_gpa ?? null;
-                      const usedCourseAvg = courseData.boilergrades_data?.used_course_avg ?? false;
-                      const rmpComments = courseData.rmp_comments || [];
-                      const avgQuality = rmpComments.length ? (rmpComments.reduce((s: number, c: { qualityRating: number }) => s + c.qualityRating, 0) / rmpComments.length).toFixed(2) : null;
-                      const avgDifficulty = rmpComments.length ? (rmpComments.reduce((s: number, c: { difficulty: number }) => s + c.difficulty, 0) / rmpComments.length).toFixed(2) : null;
-                      const wouldTakeAgain = rmpComments.length ? Math.round((rmpComments.filter((c: { wouldTakeAgain: number | null }) => c.wouldTakeAgain === 1).length / rmpComments.length) * 100) : null;
-                      const numReviews = rmpComments.length;
-                      const summary = courseData.comments_summary?.summary || null;
-                      const strengths = courseData.comments_summary?.strengths || [];
-                      const weaknesses = courseData.comments_summary?.weaknesses || [];
-                      return {
-                        courseName: c.courseName,
-                        gpa,
-                        usedCourseAvg,
-                        avgQuality,
-                        avgDifficulty,
-                        wouldTakeAgain,
-                        numReviews,
-                        summary,
-                        strengths,
-                        weaknesses,
-                      };
-                    });
-                    const dataWithRawCourses = { ...parsed, _rawCourses };
-                    // Render only the sub-cards from ScheduleScoreDetails
-                    // @ts-ignore
-                    return <ScheduleScoreDetails data={dataWithRawCourses} onlySubCards />;
-                  })()}
-                </div>
+            {/* Comments Summary Button */}
+            <button
+              className="flex items-center mx-auto px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition mb-2"
+              onClick={() => setCommentsOpen((open: boolean) => !open)}
+              aria-expanded={commentsOpen}
+              aria-controls="comments-summary-dropdown"
+              style={{ fontFamily: 'Poppins, Arial, sans-serif' }}
+            >
+              {commentsOpen ? 'Hide' : 'Show'} Comments Summary
+              <span className="ml-2">{commentsOpen ? '▲' : '▼'}</span>
+            </button>
+            {/* Comments Summary Dropdown */}
+            {commentsOpen && (
+              <div
+                id="comments-summary-dropdown"
+                className="w-full max-w-3xl mx-auto mt-4 mb-4 bg-white border border-green-200 rounded-2xl shadow-lg p-6 flex flex-col gap-6 text-base"
+                style={{ fontFamily: 'Poppins, Arial, sans-serif' }}
+              >
+                {((parsed._rawCourses ?? (parsed.allCourses || []).map((c: any) => ({
+                  courseName: c.courseName,
+                  instructorName: c.instructorName || '',
+                  strengths: c.strengths || [],
+                  weaknesses: c.weaknesses || [],
+                }))) as Array<{courseName: string; instructorName?: string; strengths: string[]; weaknesses: string[]}>).map((course, idx) => (
+                  <div
+                    key={course.courseName + idx}
+                    className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8 border-b border-green-100 pb-6 last:border-b-0 last:pb-0"
+                  >
+                    <div className="flex-1 min-w-[180px]">
+                      <div className="font-bold text-lg text-green-800 mb-1 flex flex-wrap items-center gap-2">
+                        {course.courseName}
+                        <span className="text-gray-500 font-normal text-base">{course.instructorName ? `| ${course.instructorName}` : ''}</span>
+                      </div>
+                      <div className="flex flex-row gap-3 mt-1">
+                        <a
+                          href={`https://www.ratemyprofessors.com/search/professors/00000?q=${encodeURIComponent(course.instructorName || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-600 hover:underline text-sm flex items-center gap-1"
+                        >
+                          <i className="bi bi-person-circle mr-1"></i>More on this professor
+                        </a>
+                        <a
+                          href={`https://boilergrades.com/class/${encodeURIComponent(course.courseName || '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                        >
+                          <i className="bi bi-journal-text mr-1"></i>More on this class
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col md:flex-row gap-4">
+                      <div className="flex-1">
+                        <div className="font-semibold text-green-700 mb-1">Strengths</div>
+                        <ul className="list-disc list-inside text-green-900 text-sm md:text-base">
+                          {(course.strengths && course.strengths.length > 0) ? course.strengths.map((s: string, i: number) => (
+                            <li key={i}>{s}</li>
+                          )) : <li className="text-gray-400">No strengths listed.</li>}
+                        </ul>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-red-700 mb-1">Weaknesses</div>
+                        <ul className="list-disc list-inside text-red-900 text-sm md:text-base">
+                          {(course.weaknesses && course.weaknesses.length > 0) ? course.weaknesses.map((w: string, i: number) => (
+                            <li key={i}>{w}</li>
+                          )) : <li className="text-gray-400">No weaknesses listed.</li>}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* CRN Verification Step */}
+      {showCrnVerification && !crnVerificationComplete && !secondLoading && (
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-cyan-200 max-w-2xl mx-auto flex flex-col items-center">
+          <h2 className="text-2xl font-bold text-cyan-700 mb-2">Verify Your CRN Numbers</h2>
+          <div className="text-gray-700 text-base mb-4 text-center max-w-xl">
+            <b>What is a CRN?</b> <br />
+            The <b>Course Reference Number (CRN)</b> is a unique 5-digit code assigned to each class section at Purdue. It identifies the exact lecture, lab, or recitation you are enrolled in. Please check that the CRN numbers below match your actual schedule. If any are incorrect, you can edit them. <br /><br />
+            <span className="text-cyan-600 font-semibold">Tip:</span> You can find your CRN on your official schedule or registration portal.
+          </div>
+          <div className="w-full overflow-x-auto mb-4">
+            <table className="min-w-full text-sm border border-cyan-200 rounded-xl">
+              <thead>
+                <tr className="bg-cyan-50">
+                  <th className="px-3 py-2">Subject</th>
+                  <th className="px-3 py-2">Code</th>
+                  <th className="px-3 py-2">Type</th>
+                  <th className="px-3 py-2">CRN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crnSchedule.map((row, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-cyan-50'}>
+                    <td className="px-3 py-2 text-center font-semibold">{row.courseSubject}</td>
+                    <td className="px-3 py-2 text-center font-semibold">{row.courseCode}</td>
+                    <td className="px-3 py-2 text-center">{row.courseType}</td>
+                    <td className="px-3 py-2 text-center">
+                      <input
+                        type="text"
+                        className="w-24 border border-cyan-200 rounded-md px-2 py-1 text-center focus:ring-2 focus:ring-cyan-300"
+                        value={row.crnNumber}
+                        onChange={e => {
+                          const newCrnSchedule = [...crnSchedule];
+                          newCrnSchedule[idx].crnNumber = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
+                          setCrnSchedule(newCrnSchedule);
+                        }}
+                        placeholder="CRN"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button
+            className="mt-4 w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-cyan-500 hover:to-blue-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
+            onClick={() => {
+              setSecondLoading(true);
+              setTimeout(() => {
+                setSecondLoading(false);
+                setShowCrnVerification(false);
+                setCrnVerificationComplete(true);
+                setScheduleGenerated(true);
+              }, 10000); // 10 seconds for second animation
+            }}
+          >
+            Verify
+          </button>
+        </div>
+      )}
+
+      {/* Second Loading Animation */}
+      {secondLoading && (
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="mb-6 animate-spin-slow">
+            <svg width="64" height="64" fill="none" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="30" stroke="#0ea5e9" strokeWidth="4" fill="#e0f2fe" />
+              <path d="M32 20v16l12 6" stroke="#0ea5e9" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div className="w-64 h-4 bg-blue-100 rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full bg-blue-400 transition-all duration-100"
+              style={{ width: `${secondProgress}%` }}
+            ></div>
+          </div>
+          <div className="text-lg font-semibold text-blue-700 mb-2">Verifying your CRNs...</div>
+          <div className="text-gray-500 mb-2">{loadingTips[secondTipIndex]}</div>
+          <div className="text-gray-400 text-sm">This may take up to 10 seconds.</div>
+        </div>
+      )}
     </div>
   );
 }
