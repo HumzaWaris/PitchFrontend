@@ -80,7 +80,7 @@ const ScoreCircle: React.FC<{
 
   return (
     <div className="flex flex-col items-center mx-2 mb-6 min-w-[180px] max-w-xs flex-1">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-2 mt-4 sm:mt-6">
         <span className="text-2xl">{icon}</span>
         <div className="text-lg font-bold text-gray-800 text-center tracking-tight">{label}</div>
         <InfoIcon text={infoText} />

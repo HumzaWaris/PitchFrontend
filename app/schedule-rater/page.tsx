@@ -1158,7 +1158,13 @@ export default function ScheduleRater() {
                     </div>
                     {/* Back-to-Back Classes */}
                     <div className="w-full flex items-center gap-2 py-4">
-                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap min-w-[120px]"><span className="text-xl">🧩</span>Back-to-Back Classes</div>
+                      <div className="flex flex-col gap-1 max-w-xs min-w-[120px]">
+                        <span className="flex items-center gap-2 text-lg font-bold text-gray-700 whitespace-nowrap"><span className="text-xl">🧩</span>Back-to-Back Classes</span>
+                        <span className="flex items-center gap-2 text-gray-500 text-sm font-normal w-full">
+                          <svg className="w-4 h-4 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="white" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" /></svg>
+                          <span className="w-full">Max amount of back-to-back classes you want to have at once.</span>
+                        </span>
+                      </div>
                       <div className="flex-1 flex justify-end gap-2">
                         <input
                           type="number"
