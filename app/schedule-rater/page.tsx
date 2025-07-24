@@ -1286,10 +1286,10 @@ export default function ScheduleRater() {
 
         {/* Score Display */}
         {finalScore !== null && (
-          <div className="relative bg-white rounded-3xl shadow-2xl p-10 border border-cyan-100 mt-8 mb-8 max-w-5xl w-full mx-auto flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4 text-cyan-700">Your Schedule Score</h2>
-            {/* Huddle Score Circle replaces the numeric score */}
-            <div className="mb-2 flex justify-center">
+          <div className="w-full flex justify-center items-center mt-8 mb-8 px-2">
+            <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl p-6 sm:p-10 border border-cyan-100 flex flex-col items-center">
+              <h2 className="text-2xl font-semibold mb-4 text-cyan-700">Your Schedule Score</h2>
+              {/* Huddle Score + 3 Cards neatly grouped */}
               {(() => {
                 const allCourses = parsed.allCourses || [];
                 const _rawCourses = allCourses.map((c: { courseName: string }) => {
@@ -1318,94 +1318,85 @@ export default function ScheduleRater() {
                   };
                 });
                 const dataWithRawCourses = { ...parsed, _rawCourses };
-                // Only render the BigScoreCircle from ScheduleScoreDetails
+                // Render the full ScheduleScoreDetails (Huddle Score + 3 cards) in a single container
                 // @ts-ignore
-                return <div className="scale-110"><ScheduleScoreDetails data={dataWithRawCourses} onlyBigScore /></div>;
+                return <ScheduleScoreDetails data={dataWithRawCourses} />;
               })()}
-            </div>
-            <button
-              className="flex items-center mx-auto px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg font-semibold hover:bg-cyan-200 transition mb-2 mt-2"
-              onClick={() => setAnalysisOpen((open) => !open)}
-              aria-expanded={analysisOpen}
-              aria-controls="schedule-analysis-dropdown"
-            >
-              {analysisOpen ? 'Hide' : 'Show'} Schedule Analysis
-              <span className="ml-2">{analysisOpen ? '▲' : '▼'}</span>
-            </button>
-            {/* Comments Summary Button */}
-            <button
-              className="flex items-center mx-auto px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition mb-2"
-              onClick={() => setCommentsOpen((open: boolean) => !open)}
-              aria-expanded={commentsOpen}
-              aria-controls="comments-summary-dropdown"
-              style={{ fontFamily: 'Poppins, Arial, sans-serif' }}
-            >
-              {commentsOpen ? 'Hide' : 'Show'} Comments Summary
-              <span className="ml-2">{commentsOpen ? '▲' : '▼'}</span>
-            </button>
-            {/* Comments Summary Dropdown */}
-            {commentsOpen && (
-              <div
-                id="comments-summary-dropdown"
-                className="w-full max-w-3xl mx-auto mt-4 mb-4 bg-white border border-green-200 rounded-2xl shadow-lg p-6 flex flex-col gap-6 text-base"
+              {/* Comments Summary Button */}
+              <button
+                className="flex items-center mx-auto px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition mb-2 mt-10"
+                onClick={() => setCommentsOpen((open: boolean) => !open)}
+                aria-expanded={commentsOpen}
+                aria-controls="comments-summary-dropdown"
                 style={{ fontFamily: 'Poppins, Arial, sans-serif' }}
               >
-                {((parsed._rawCourses ?? (parsed.allCourses || []).map((c: any) => ({
-                  courseName: c.courseName,
-                  instructorName: c.instructorName || '',
-                  strengths: c.strengths || [],
-                  weaknesses: c.weaknesses || [],
-                }))) as Array<{courseName: string; instructorName?: string; strengths: string[]; weaknesses: string[]}>).map((course, idx) => (
-                  <div
-                    key={course.courseName + idx}
-                    className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8 border-b border-green-100 pb-6 last:border-b-0 last:pb-0"
-                  >
-                    <div className="flex-1 min-w-[180px]">
-                      <div className="font-bold text-lg text-green-800 mb-1 flex flex-wrap items-center gap-2">
-                        {course.courseName}
-                        <span className="text-gray-500 font-normal text-base">{course.instructorName ? `| ${course.instructorName}` : ''}</span>
+                {commentsOpen ? 'Hide' : 'Show'} Comments Summary
+                <span className="ml-2">{commentsOpen ? '▲' : '▼'}</span>
+              </button>
+              {/* Comments Summary Dropdown */}
+              {commentsOpen && (
+                <div
+                  id="comments-summary-dropdown"
+                  className="w-full max-w-3xl mx-auto mt-4 mb-4 bg-white border border-green-200 rounded-2xl shadow-lg p-6 flex flex-col gap-6 text-base"
+                  style={{ fontFamily: 'Poppins, Arial, sans-serif' }}
+                >
+                  {((parsed._rawCourses ?? (parsed.allCourses || []).map((c: any) => ({
+                    courseName: c.courseName,
+                    instructorName: c.instructorName || '',
+                    strengths: c.strengths || [],
+                    weaknesses: c.weaknesses || [],
+                  }))) as Array<{courseName: string; instructorName?: string; strengths: string[]; weaknesses: string[]}>).map((course, idx) => (
+                    <div
+                      key={course.courseName + idx}
+                      className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8 border-b border-green-100 pb-6 last:border-b-0 last:pb-0"
+                    >
+                      <div className="flex-1 min-w-[180px]">
+                        <div className="font-bold text-lg text-green-800 mb-1 flex flex-wrap items-center gap-2">
+                          {course.courseName}
+                          <span className="text-gray-500 font-normal text-base">{course.instructorName ? `| ${course.instructorName}` : ''}</span>
+                        </div>
+                        <div className="flex flex-row gap-3 mt-1">
+                          <a
+                            href={`https://www.ratemyprofessors.com/search/professors/00000?q=${encodeURIComponent(course.instructorName || '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-600 hover:underline text-sm flex items-center gap-1"
+                          >
+                            <i className="bi bi-person-circle mr-1"></i>More on this professor
+                          </a>
+                          <a
+                            href={`https://boilergrades.com/class/${encodeURIComponent(course.courseName || '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                          >
+                            <i className="bi bi-journal-text mr-1"></i>More on this class
+                          </a>
+                        </div>
                       </div>
-                      <div className="flex flex-row gap-3 mt-1">
-                        <a
-                          href={`https://www.ratemyprofessors.com/search/professors/00000?q=${encodeURIComponent(course.instructorName || '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-cyan-600 hover:underline text-sm flex items-center gap-1"
-                        >
-                          <i className="bi bi-person-circle mr-1"></i>More on this professor
-                        </a>
-                        <a
-                          href={`https://boilergrades.com/class/${encodeURIComponent(course.courseName || '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex items-center gap-1"
-                        >
-                          <i className="bi bi-journal-text mr-1"></i>More on this class
-                        </a>
+                      <div className="flex-1 flex flex-col md:flex-row gap-4">
+                        <div className="flex-1">
+                          <div className="font-semibold text-green-700 mb-1">Strengths</div>
+                          <ul className="list-disc list-inside text-green-900 text-sm md:text-base">
+                            {(course.strengths && course.strengths.length > 0) ? course.strengths.map((s: string, i: number) => (
+                              <li key={i}>{s}</li>
+                            )) : <li className="text-gray-400">No strengths listed.</li>}
+                          </ul>
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-red-700 mb-1">Weaknesses</div>
+                          <ul className="list-disc list-inside text-red-900 text-sm md:text-base">
+                            {(course.weaknesses && course.weaknesses.length > 0) ? course.weaknesses.map((w: string, i: number) => (
+                              <li key={i}>{w}</li>
+                            )) : <li className="text-gray-400">No weaknesses listed.</li>}
+                          </ul>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-1 flex flex-col md:flex-row gap-4">
-                      <div className="flex-1">
-                        <div className="font-semibold text-green-700 mb-1">Strengths</div>
-                        <ul className="list-disc list-inside text-green-900 text-sm md:text-base">
-                          {(course.strengths && course.strengths.length > 0) ? course.strengths.map((s: string, i: number) => (
-                            <li key={i}>{s}</li>
-                          )) : <li className="text-gray-400">No strengths listed.</li>}
-                        </ul>
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-red-700 mb-1">Weaknesses</div>
-                        <ul className="list-disc list-inside text-red-900 text-sm md:text-base">
-                          {(course.weaknesses && course.weaknesses.length > 0) ? course.weaknesses.map((w: string, i: number) => (
-                            <li key={i}>{w}</li>
-                          )) : <li className="text-gray-400">No weaknesses listed.</li>}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
