@@ -1370,14 +1370,6 @@ export default function ScheduleRater() {
                           >
                             <i className="bi bi-person-circle mr-1"></i>More on this professor
                           </a>
-                          <a
-                            href={`https://boilergrades.com/class/${encodeURIComponent(course.courseName || '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
-                          >
-                            <i className="bi bi-journal-text mr-1"></i>More on this class
-                          </a>
                         </div>
                       </div>
                       <div className="flex-1 flex flex-col md:flex-row gap-4">
