@@ -8,6 +8,7 @@ import React from "react";
 import ScheduleScoreDetails from "./ScheduleScoreDetails";
 import { createPortal } from 'react-dom';
 import locationsData from '../../locations.json';
+import { uploadScheduleImage } from './utils/firebaseUpload';
 
 type RmpComment = {
   qualityRating: number;
@@ -553,6 +554,7 @@ export default function ScheduleRater() {
   const [scheduleUploaded, setScheduleUploaded] = useState(false);
   const [scheduleGenerated, setScheduleGenerated] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [firebaseUrl, setFirebaseUrl] = useState<string | null>(null);
   
   // New state for CRN verification flow
   const [showCrnVerification, setShowCrnVerification] = useState(false);
@@ -846,9 +848,14 @@ export default function ScheduleRater() {
                   className="hidden"
                   accept="image/*"
                   onChange={e => {
+                    console.log("🔄 onChange triggered");
+                    console.log("📁 Files:", e.target.files);
                     if (e.target.files && e.target.files[0]) {
+                      console.log("✅ File selected:", e.target.files[0].name);
                       setSelectedFile(e.target.files[0]);
                       setScheduleUploaded(true);
+                    } else {
+                      console.log("❌ No file found");
                     }
                   }}
                 />
@@ -858,6 +865,19 @@ export default function ScheduleRater() {
               <button
                 className="mt-6 w-full bg-gradient-to-r from-green-400 to-cyan-500 text-white py-3 px-6 rounded-xl text-lg font-semibold hover:from-green-500 hover:to-cyan-600 transform transition-all hover:scale-[1.02] focus:ring-4 focus:ring-cyan-200 shadow-md"
                 onClick={() => {
+                  console.log("Pizza")
+                  if (selectedFile) {
+                    console.log("Burger")
+                                         uploadScheduleImage(selectedFile)
+                       .then((url) => {
+                         console.log("✅ Uploaded URL:", url);
+                         setFirebaseUrl(url);
+                       })
+                      .catch((err) => {
+                        console.error("❌ Upload failed:", err);
+                      });
+                  }
+
                   setLoading(true);
                   setShowCrnVerification(false);
                   setCrnVerificationComplete(false);
